@@ -1,159 +1,343 @@
-# Turborepo starter
+# IntellMeet
 
-This Turborepo starter is maintained by the Turborepo core team.
+AI-powered smart meeting workspace built for teams, startups, colleges, and organizations.
 
-## Using this example
+IntellMeet combines live meetings, browser-based recording, real-time transcripts, rolling summaries, AI-generated action items, searchable meeting memory, and workspace collaboration into one system.
 
-Run the following command:
+The goal is simple:
 
-```sh
-npx create-turbo@latest
+**Turn meetings from forgotten conversations into searchable decision systems.**
+
+---
+
+# Core Idea
+
+Most meeting tools stop at video calling.
+
+IntellMeet goes further:
+
+* Live meetings with WebRTC
+* Host-side browser recording
+* 30-second chunk upload system
+* Continuous transcript generation
+* Rolling AI summaries during the meeting
+* Action item extraction
+* Contextual AI chat for current + past meetings
+* Workspace collaboration and analytics
+* Google Drive integration for storage
+
+This is not just a meeting app.
+
+This is a meeting intelligence platform.
+
+---
+
+# Tech Stack
+
+## Frontend
+
+* Next.js
+* TypeScript
+* React
+* Tailwind CSS
+* ShadCN UI
+* Socket.io Client
+* WebRTC
+* MediaRecorder API
+* Google OAuth
+
+## Backend
+
+* Node.js
+* Express.js
+* TypeScript
+* MongoDB
+* Redis (ioredis)
+* Socket.io
+* Google Drive API
+* NVIDIA NIM APIs
+* OpenRouter APIs
+* Axios
+* Multer
+* Cloudinary
+* JWT
+
+## Infrastructure
+
+* TurboRepo
+* pnpm Workspaces
+* Docker
+* Kubernetes (future scale)
+* GitHub Actions
+
+---
+
+# Recording Architecture
+
+## Final Production MVP Decision
+
+### Host-side Browser Recording + 30s Chunk Upload + Continuous Processing
+
+We do **not** use heavy server-side recording infra in phase 1.
+
+We use:
+
+* Browser MediaRecorder API
+* Only host records
+* Recording split into 30-second chunks
+* Continuous upload while meeting runs
+* Google Drive storage
+* Parallel transcript + summary processing
+
+This gives:
+
+* free and scalable architecture
+* safer long meetings
+* no duplicate recordings
+* autosave reliability
+* rolling live intelligence
+
+---
+
+# Recording Flow
+
+```text
+Meeting Running
+↓
+Host starts recording
+↓
+Browser captures mic + webcam + screen share
+↓
+30 second chunk generated
+↓
+Chunk uploaded to backend
+↓
+Chunk stored in Google Drive
+↓
+Chunk transcribed
+↓
+Master transcript updated
+↓
+Rolling summary updated
+↓
+Action items updated
+↓
+Chat context updated
+↓
+Repeat continuously
 ```
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+# Project Structure
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```text
+intellmeet/
+│
+├── apps/
+│   ├── frontend/
+│   └── backend/
+│
+├── packages/
+│   ├── ui/
+│   ├── types/
+│   ├── eslint-config/
+│   └── typescript-config/
+│
+├── infrastructure/
+│   ├── docker/
+│   ├── kubernetes/
+│   └── monitoring/
+│
+├── docs/
+├── .github/
+│   └── workflows/
+│
+├── turbo.json
+├── pnpm-workspace.yaml
+├── pnpm-lock.yaml
+├── package.json
+└── README.md
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm dlx turbo build
-pnpm exec turbo build
+# Authentication
+
+## Google OAuth Only
+
+No traditional login/register forms.
+
+### User Flow
+
+```text
+Landing Page
+↓
+Sign Up with Google
+↓
+If existing user → Dashboard
+↓
+If new user → Onboarding
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+### New User Onboarding
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+* auto-fetched Google profile
+* name
+* email
+* profile image
+* phone number
+* clear visible face image upload
+* workspace setup
 
-```sh
-turbo build --filter=docs
+This reduces friction and improves trust.
+
+---
+
+# Development Setup
+
+## Requirements
+
+* Node.js 18+
+* pnpm 9+
+* MongoDB
+* Redis
+* Google Cloud credentials
+* NVIDIA NIM API access
+* OpenRouter API key
+
+---
+
+# Install
+
+## Clone
+
+```bash
+git clone https://github.com/theharshalchaudhari/IntellMeet
+cd intellmeet
 ```
 
-Without global `turbo`:
+## Install dependencies
 
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+```bash
+pnpm install
 ```
 
-### Develop
+## Run development
 
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
+```bash
+pnpm dev
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
+# Monorepo Rules
+
+## Only one lockfile
+
+```text
+/pnpm-lock.yaml
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+Never create:
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
+```text
+apps/frontend/pnpm-lock.yaml
+apps/backend/pnpm-lock.yaml
 ```
 
-Without global `turbo`:
+## Root controls versions
 
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+Use:
+
+```bash
+pnpm add -w
 ```
 
-### Remote Caching
+for shared tooling.
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+Use:
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
+```bash
+pnpm --filter frontend add <package>
+pnpm --filter backend add <package>
 ```
 
-Without global `turbo`, use your package manager:
+for app-specific dependencies.
 
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
-```
+---
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+# Development Order
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+## Phase 1
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+* backend core setup
+* database
+* auth
 
-```sh
-turbo link
-```
+## Phase 2
 
-Without global `turbo`:
+* meeting creation
+* WebRTC
+* Socket.io
 
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
+## Phase 3
 
-## Useful Links
+* recording pipeline
+* chunk upload
+* Google Drive storage
 
-Learn more about the power of Turborepo:
+## Phase 4
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+* transcript generation
+* rolling summary
+* AI extraction
+
+## Phase 5
+
+* contextual AI chat
+* searchable meeting memory
+* analytics
+
+---
+
+# Engineering Principles
+
+* clean modular code
+* one source of truth
+* root-controlled versions
+* semantic commits
+* feature branches
+* no committed secrets
+* scalable architecture first
+* product over premature complexity
+
+We optimize for:
+
+**clarity → reliability → scale**
+
+---
+
+# Vision
+
+Meetings should not disappear.
+
+Every discussion should become:
+
+* searchable
+* actionable
+* accountable
+* intelligent
+
+That is what IntellMeet is built for.
+
+---
+
+# Status
+
+Currently in active development.
+
+Architecture is finalized.
+Core system implementation in progress.
+
+Phase 1 foundation complete.
