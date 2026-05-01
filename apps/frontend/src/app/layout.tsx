@@ -41,11 +41,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {/* Background Layer */}
+          {/* Background Layer
           <div className="fixed inset-0 -z-10">
             <InteractiveGrid />
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(76,29,149,0.1),transparent_70%)]" />
-          </div>
+          </div> */}
 
           {/* Header */}
           <Header />

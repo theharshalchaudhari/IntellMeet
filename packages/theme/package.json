@@ -3,5 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "main": "./theme.css",
-  "style": "./theme.css"
+  "style": "./theme.css",
+  "exports": {
+    ".": "./theme.css",
+    "./custom": "./custom.css"
+  }
 }

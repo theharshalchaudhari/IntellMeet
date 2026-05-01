@@ -1,7 +1,12 @@
+import Hero from "@/components/landing/Hero"
 import { Button } from "@/components/ui/button"
+import { div } from "framer-motion/client"
 
 export default function Page() {
-  return (
+  return (<div>
+
+    <Hero />
+
     <div className="flex min-h-svh p-6">
       <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
         <div>
@@ -15,5 +20,6 @@ export default function Page() {
         </div>
       </div>
     </div>
+  </div>
   )
 }

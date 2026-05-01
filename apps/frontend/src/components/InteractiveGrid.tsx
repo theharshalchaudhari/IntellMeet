@@ -1,4 +1,5 @@
 "use client";
+import { div } from "framer-motion/client";
 import React, { useEffect, useRef } from "react";
 
 const GAP = 20;
@@ -108,9 +109,23 @@ export const InteractiveGrid = () => {
   }, []);
 
   return (
+    <div>
+
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-80 blur-3xl"
+      >
+        <source src="/background.mp4" type="video/mp4" />
+      </video>
+
     <canvas
       ref={canvasRef}
       className="fixed inset-0 -z-10 bg-background pointer-events-none"
     />
+    
+    </div>
   );
 };

@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 
@@ -18,147 +17,124 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 
-const NAV_ITEMS = [
-  { label: "Home", href: "/" },
-  { label: "Pricing", href: "#pricing" },
-];
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export function Header() {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const navRef = useRef<HTMLDivElement>(null);
+
+  const [show, setShow] = useState(true);
+  const lastScroll = useRef(0);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    const onScroll = () => {
+      const current = window.scrollY;
+      if (current <= 0) setShow(true);
+      else if (current > lastScroll.current) setShow(false);
+      else setShow(true);
+      lastScroll.current = current;
+    };
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const el = navRef.current;
+    const ctx = gsap.context(() => {
+      gsap.timeline({
+        scrollTrigger: {
+          trigger: document.body,
+          start: "top top",
+          end: "200 top",
+          scrub: true,
+        },
+      })
+        .to(el, { width: "1024px", paddingLeft: "1.5rem", paddingRight: "1.5rem", ease: "none" }, 0)
+        .to(el, { scale: 0.95, ease: "none" }, 0);
+    });
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <>
-      <nav className="fixed top-4 left-1/2 px-1 -translate-x-1/2 z-50 w-full flex justify-center">
+    <nav
+      className={`
+        fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full flex justify-center
+        transition-transform duration-300 ease-out
+        ${show ? "translate-y-0" : "-translate-y-32"}
+      `}
+    >
+      <div ref={navRef} className="glass w-[95vw] px-10 py-3 rounded-full flex items-center justify-between will-change-[width,transform]">
 
-        <div
-          className={`
-            transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]
-            w-full
-            ${scrolled ? "max-w-5xl px-6" : "max-w-[95%] px-10"}
-            py-3 rounded-full
-            bg-background/50 backdrop-blur-3xl
-            border border-border/30
-            shadow-[0_8px_30px_rgba(0,0,0,0.12)]
-          `}
-        >
-          <div className="flex items-center justify-between">
+        <div className="relative ml-16">
 
-            {/* LOGO */}
-            <Logo
-              src="/Logo.svg"
-              alt="IntellMeet"
-              size={60}
-              className="scale-210 ml-7"
+          <div 
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 -z-10 rounded-full scale-100 blur-[20px] opacity-70"
+            >
+            <Logo src="/Logo.svg" alt="IntellMeet" size={60} className="scale-250" />
+          </div>
+          <Logo src="/Logo.svg" alt="IntellMeet" size={60} className="scale-250" />
+        </div>
+
+        {/* NAV */}
+        <NavigationMenu className="hidden md:flex">
+          <NavigationMenuList className="gap-2">
+
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link href="/">Home</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>Demo</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <div className="grid w-[400px] grid-cols-2 gap-3 p-4">
+                  <Link href="/demo/live">Live Demo</Link>
+                  <Link href="/demo/ai">AI Assistant</Link>
+                  <Link href="/demo/recording">Recording</Link>
+                  <Link href="/demo/analytics">Analytics</Link>
+                </div>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link href="#pricing">Pricing</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+
+          </NavigationMenuList>
+        </NavigationMenu>
+
+        {/* RIGHT */}
+        <div className="flex items-center gap-2">
+
+          {/* Get Started with tight amber glow */}
+          <div className="relative hidden md:block">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-primary -z-10 rounded-md blur-[18px] opacity-70"
+              
             />
-
-            {/* NAVIGATION MENU */}
-            <NavigationMenu className="hidden md:flex">
-              <NavigationMenuList className="gap-2">
-
-                {/* Home */}
-                <NavigationMenuItem>
-                  <NavigationMenuLink
-                    asChild
-                    className={navigationMenuTriggerStyle()}
-                  >
-                    <Link href="/">Home</Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-
-                {/* Demo DROPDOWN */}
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Demo</NavigationMenuTrigger>
-
-                  <NavigationMenuContent>
-                    <div className="grid w-[400px] grid-cols-2 gap-3 p-4">
-
-                      <Link href="/demo/live" className="block p-3 rounded-md hover:bg-muted">
-                        <p className="text-sm font-medium">Live Demo</p>
-                        <p className="text-xs text-muted-foreground">
-                          Join a real meeting experience
-                        </p>
-                      </Link>
-
-                      <Link href="/demo/ai" className="block p-3 rounded-md hover:bg-muted">
-                        <p className="text-sm font-medium">AI Assistant</p>
-                        <p className="text-xs text-muted-foreground">
-                          See real-time transcription
-                        </p>
-                      </Link>
-
-                      <Link href="/demo/recording" className="block p-3 rounded-md hover:bg-muted">
-                        <p className="text-sm font-medium">Recording</p>
-                        <p className="text-xs text-muted-foreground">
-                          Chunk-based recording system
-                        </p>
-                      </Link>
-
-                      <Link href="/demo/analytics" className="block p-3 rounded-md hover:bg-muted">
-                        <p className="text-sm font-medium">Analytics</p>
-                        <p className="text-xs text-muted-foreground">
-                          Meeting insights dashboard
-                        </p>
-                      </Link>
-
-                    </div>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-
-                {/* Pricing */}
-                <NavigationMenuItem>
-                  <NavigationMenuLink
-                    asChild
-                    className={navigationMenuTriggerStyle()}
-                  >
-                    <Link href="#pricing">Pricing</Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-
-              </NavigationMenuList>
-            </NavigationMenu>
-
-            {/* RIGHT */}
-            <div className="flex items-center gap-2">
-
-              <Link
-                href="/signup"
-                className="hidden md:block bg-primary text-primary-foreground px-5 py-2 rounded-md text-sm font-semibold hover:opacity-90 transition"
-              >
-                Get Started
-              </Link>
-
-              <ThemeToggle />
-
-              <button
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden p-2 rounded-full hover:bg-muted"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-
-            </div>
+            <Link
+              href="/signup"
+              className="relative block bg-primary text-primary-foreground px-5 py-2 rounded-md text-sm font-semibold"
+            >
+              Get Started
+            </Link>
           </div>
-        </div>
-      </nav>
 
-      {/* MOBILE MENU */}
-      {mobileOpen && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 w-[92%] max-w-sm bg-popover text-popover-foreground rounded-2xl border border-border shadow-lg z-40 md:hidden">
-          <div className="flex flex-col divide-y">
-            <Link href="/" className="px-6 py-4">Home</Link>
-            <Link href="/demo" className="px-6 py-4">Demo</Link>
-            <Link href="#pricing" className="px-6 py-4">Pricing</Link>
-          </div>
+          <ThemeToggle />
+
+          <button className="md:hidden p-2 rounded-full">
+            <Menu className="h-5 w-5" />
+          </button>
+
         </div>
-      )}
-    </>
+      </div>
+    </nav>
   );
 }
-
