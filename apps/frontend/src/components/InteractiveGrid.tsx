@@ -56,7 +56,7 @@ export const InteractiveGrid = () => {
         c.arc(this.x, this.y, 1.2 + f * 1.2, 0, Math.PI * 2);
 
         if (f > 0.02) {
-          c.fillStyle = "var(--primary)";
+          c.fillStyle = "#4b5563";
           c.globalAlpha = 0.45;
         } else {
           c.fillStyle = "var(--primary)";
