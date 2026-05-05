@@ -1,25 +1,17 @@
-import Hero from "@/components/landing/Hero"
-import { Button } from "@/components/ui/button"
-import { div } from "framer-motion/client"
+import Hero from "@/components/landing/Hero";
+import Card from "@/components/landing/Card";
+import Section from "@/components/landing/Section";
 
 export default function Page() {
-  return (<div>
+  return (
+    <main>
+      <Hero />
 
-    <Hero />
-
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Landing Page!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>t</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
-  </div>
-  )
+      <Card>
+        <Section />
+        <Section />
+        <Section />
+      </Card>
+    </main>
+  );
 }

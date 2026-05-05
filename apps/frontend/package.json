@@ -15,11 +15,13 @@
     "@hugeicons/core-free-icons": "4.1.1",
     "@hugeicons/react": "1.1.6",
     "@repo/theme": "workspace:^",
+    "@supabase/supabase-js": "^2.105.1",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "framer-motion": "^12.38.0",
     "gsap": "^3.15.0",
     "lucide-react": "^1.14.0",
+    "motion": "^12.38.0",
     "next": "16.2.4",
     "next-themes": "0.4.6",
     "radix-ui": "1.4.3",
@@ -36,5 +38,6 @@
     "@types/react-dom": "19.2.2",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "4.2.4"
-  }
+  },
+  "browserslist": "last 3 versions, not dead, > 0.5%"
 }

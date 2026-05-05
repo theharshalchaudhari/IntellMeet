@@ -3,13 +3,13 @@ import "./globals.css";
 
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { cn } from "@/lib/utils";
-
 import { Header } from "@/components/common/Header";
-import { InteractiveGrid } from "@/components/InteractiveGrid";
+import { RocketPreloader } from "@/components/landing/Preloader";
+import Checks from "@/components/Checks";
 
 const poppins = Poppins({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "900"],
   variable: "--font-sans",
 });
 
@@ -27,13 +27,10 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn(
-        "antialiased",
-        poppins.variable,
-        fontMono.variable
-      )}
+      className={cn("antialiased", poppins.variable, fontMono.variable)}
     >
-      <body className="bg-background text-foreground">
+      <body className="bg-background text-foreground font-sans">
+        <RocketPreloader />
 
         <ThemeProvider
           attribute="class"
@@ -41,20 +38,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {/* Background Layer
-          <div className="fixed inset-0 -z-10">
-            <InteractiveGrid />
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(76,29,149,0.1),transparent_70%)]" />
-          </div> */}
+            <Checks interactive showMask/>
 
-          {/* Header */}
+
           <Header />
-
-          {/* Main Content */}
-          <main className="relative z-10 pt-24">
-            {children}
-          </main>
-
+          <main className="relative z-10 pt-24">{children}</main>
         </ThemeProvider>
       </body>
     </html>
