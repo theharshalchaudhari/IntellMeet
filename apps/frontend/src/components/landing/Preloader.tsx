@@ -3,22 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 
 export function RocketPreloader() {
-  // Only render the DOM node after first client paint.
-  // This prevents React from ever trying to reconcile a server-rendered
-  // preloader div that we then manually .remove() — which is what causes
-  // the Node.insertBefore hydration crash.
   const [mounted, setMounted] = useState(false);
 
   const valRef  = useRef<HTMLSpanElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
 
-  // Mount gate — runs synchronously on first client render
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Preloader logic — only runs once the DOM node actually exists
   useEffect(() => {
     if (!mounted) return;
 

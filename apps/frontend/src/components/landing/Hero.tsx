@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { HeroIllustration } from "../svg/HeroIllustration";
 
-/* ------------------ HOOK ------------------ */
 const useHeroFade = () => {
   useEffect(() => {
     const el = document.getElementById("hero-fade");

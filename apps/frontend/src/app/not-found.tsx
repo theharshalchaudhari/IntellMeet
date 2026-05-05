@@ -5,7 +5,6 @@ export default function NotFound() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center p-6 text-center">
       <div className="space-y-4">
-        {/* Large Aesthetic Error Code */}
         <h1 className="text-9xl font-bold tracking-tighter text-white/10 select-none">
           404
         </h1>
@@ -26,7 +25,6 @@ export default function NotFound() {
         </div>
       </div>
 
-      {/* Subtle bottom detail to match the 'Stitch' feel */}
       <div className="fixed bottom-8 font-mono text-[10px] uppercase tracking-[0.3em] text-zinc-700">
         Error Code: 0x404_NULL_REFERENCE
       </div>

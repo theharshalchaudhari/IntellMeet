@@ -22,7 +22,6 @@ export default function OnboardingPage() {
   };
 
   const handleContinue = async () => {
-    // send to backend
     await fetch("/api/user/complete-profile", {
       method: "POST",
       body: JSON.stringify({ username }),

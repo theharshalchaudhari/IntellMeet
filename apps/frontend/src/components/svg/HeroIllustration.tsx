@@ -1,5 +1,3 @@
-// HeroIllustration.tsx
-
 export const HeroIllustration = ({ className }: { className?: string }) => {
   return (
     <svg

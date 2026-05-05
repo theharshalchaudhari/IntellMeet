@@ -24,7 +24,6 @@ export default function Checks({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [docH, setDocH] = useState<number>(0);
 
-  // ── measure full document height (for scrollable CSS + canvas) ──
   useEffect(() => {
     const measure = () =>
       setDocH(document.documentElement.scrollHeight);
@@ -36,7 +35,6 @@ export default function Checks({
     return () => ro.disconnect();
   }, []);
 
-  // ── INTERACTIVE CANVAS ─────────────────────────
   useEffect(() => {
     if (!interactive) return;
 
@@ -80,7 +78,7 @@ export default function Checks({
     const updateColors = () => {
       baseRGB = parseColor(getVar("--foreground", "#000"));
       activeRGB = parseColor(getVar("--primary", "#888"));
-      needsDraw = true; // FIX: force redraw on theme change
+      needsDraw = true;
     };
 
     const init = () => {
@@ -172,7 +170,6 @@ export default function Checks({
 
     const onResize = () => init();
 
-    // FIX: theme change detection
     const observer = new MutationObserver(updateColors);
     observer.observe(document.documentElement, {
       attributes: true,
@@ -197,7 +194,6 @@ export default function Checks({
     };
   }, [interactive, scrollable, docH, gap, radius]);
 
-  // ── CSS GRID (theme-safe) ─────────────────────
   const gridStyle: React.CSSProperties = {
     backgroundSize: `${gap}px ${gap}px`,
     backgroundImage: `

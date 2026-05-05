@@ -40,7 +40,6 @@ export const InteractiveGrid = ({
     if (!ctx) return;
     const c = ctx;
 
-    // ── Color helpers ──────────────────────────────────────────────
     const parseColor = (color: string): [number, number, number] => {
       const tmp = document.createElement("canvas");
       tmp.width = tmp.height = 1;
@@ -80,29 +79,19 @@ const getColors = () => {
       }
     };
 
-    // ── Scroll state ───────────────────────────────────────────────
-    // rawScroll  — actual window.scrollY, updated immediately on scroll
-    // lerpScroll — lazily interpolated, used only for the EFFECT origin
-    //
-    // When you scroll fast: rawScroll jumps, lerpScroll lags behind.
-    // Effect world-Y = mouse.y (viewport) + lerpScroll → lags upward.
-    // As lerpScroll catches up → effect drifts back under the mouse.
     let rawScroll  = window.scrollY;
     let lerpScroll = rawScroll;
 
-    // mouse stays in VIEWPORT (client) coordinates at all times
     const mouse = { x: -9999, y: -9999 };
     let mouseActive = false;
 
     let W = 0, VH = 0, dpr = 1;
 
-    // Flat typed arrays
-    let ox: Float32Array, oy: Float32Array; // origin world-space
-    let dx: Float32Array, dy: Float32Array; // displaced world-space
-    let f: Float32Array;                    // force [0..1]
+    let ox: Float32Array, oy: Float32Array;
+    let dx: Float32Array, dy: Float32Array;
+    let f: Float32Array;
     let count = 0;
 
-    // Static spatial grid (world-space)
     let cellSize = 0;
     let gridW = 0, gridH = 0;
     let cells: Int32Array[];
@@ -122,7 +111,6 @@ const getColors = () => {
       cells = buckets.map(b => new Int32Array(b));
     };
 
-    // ── Init ───────────────────────────────────────────────────────
     const init = () => {
       updateColors();
       buildLUT();
@@ -164,28 +152,20 @@ const getColors = () => {
 
       buildSpatialGrid(totalH);
 
-      // Re-sync scroll so no jump after resize
       rawScroll  = window.scrollY;
       lerpScroll = rawScroll;
     };
 
-    const FADE_PX = 800; // ~5rem bottom fade
+    const FADE_PX = 800;
     let raf: number;
     const activeSet = new Set<number>();
 
-    // ── Render loop ────────────────────────────────────────────────
     const loop = () => {
-      // Step 1: advance lerpScroll toward rawScroll
-      // The bigger the gap, the more the effect lags on fast scrolls.
       lerpScroll += (rawScroll - lerpScroll) * scrollInertia;
 
-      // Step 2: effect origin in world-space
-      // mouse.y is viewport-space; add lerpScroll to get world-space.
-      // Because lerpScroll is lazy, fast scroll → effect lags upward → drifts back.
       const mwx = mouse.x;
       const mwy = mouseActive ? mouse.y + lerpScroll : -9999;
 
-      // Step 3: candidate dots near the effect origin
       activeSet.clear();
       if (mouseActive) {
         const minCX = Math.max(0, Math.floor((mwx - radius) / cellSize));
@@ -202,8 +182,6 @@ const getColors = () => {
         }
       }
 
-      // Step 4: viewport bounds use rawScroll (not lerped)
-      // so the grid itself is always drawn correctly — only the effect lags.
       const viewTop    = rawScroll - gap * 2;
       const viewBottom = rawScroll + VH + gap * 2;
 
@@ -212,7 +190,6 @@ const getColors = () => {
       for (let i = 0; i < count; i++) {
         const oyi = oy[i];
 
-        // Broad cull
         if (oyi < viewTop || oyi > viewBottom) {
           if (f[i] > 0.001) {
             f[i] *= 0.9;
@@ -222,7 +199,6 @@ const getColors = () => {
           continue;
         }
 
-        // Physics
         if (activeSet.has(i)) {
           const ddx = mwx - ox[i];
           const ddy = mwy - oyi;
@@ -245,8 +221,6 @@ const getColors = () => {
           f[i]  += (0     - f[i])  * colorSmooth;
         }
 
-        // Step 5: convert world-Y to screen-Y using rawScroll
-        // The grid is fixed to the viewport — rawScroll keeps it anchored.
         const sy = dy[i] - rawScroll;
 
         if (sy < -gap || sy > VH + gap) continue;
@@ -257,7 +231,6 @@ const getColors = () => {
         const g      = colorLUT[lutIdx * 3 + 1];
         const b      = colorLUT[lutIdx * 3 + 2];
 
-        // Bottom fade over last ~5rem
         const fadeStart = VH - FADE_PX;
         let alpha = fi > 0.02 ? 0.5 : 0.6;
         if (sy > fadeStart) alpha *= Math.max(0, 1 - (sy - fadeStart) / FADE_PX);
@@ -272,9 +245,7 @@ const getColors = () => {
       raf = requestAnimationFrame(loop);
     };
 
-    // ── Events ─────────────────────────────────────────────────────
     const onMove = (e: MouseEvent) => {
-      // Pure viewport coords — no scroll offset added
       mouse.x = e.clientX;
       mouse.y = e.clientY;
       mouseActive = true;
@@ -288,7 +259,6 @@ const getColors = () => {
 
     const onScroll = () => {
       rawScroll = window.scrollY;
-      // lerpScroll chases in the RAF loop — nothing to do here
     };
 
     let resizeTimer: ReturnType<typeof setTimeout>;

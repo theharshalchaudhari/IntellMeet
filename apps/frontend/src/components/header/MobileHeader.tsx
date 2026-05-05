@@ -18,7 +18,6 @@ export default function MobileHeader() {
 
   return (
     <>
-      {/* Minimal top bar — logo + theme only */}
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2 glass">
         <Logo src="/Logo.svg" alt="IntellMeet" size={36} />
         <div className="flex items-center gap-2">
@@ -33,7 +32,6 @@ export default function MobileHeader() {
         </div>
       </header>
 
-      {/* Bottom tab bar */}
       <nav
         aria-label="Mobile navigation"
         className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-2 py-2 glass border-t border-border"
@@ -50,7 +48,6 @@ export default function MobileHeader() {
         ))}
       </nav>
 
-      {/* Full-screen drawer — CSS only, no animation lib */}
       {open && (
         <div
           className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-md flex flex-col justify-center items-center gap-8"

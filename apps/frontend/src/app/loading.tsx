@@ -6,7 +6,6 @@ import { motion, useSpring, useTransform } from "framer-motion";
 export default function Loading() {
   const [progress, setProgress] = useState(0);
 
-  // Spring creates the "rolling" number effect instead of abrupt jumps
   const springProgress = useSpring(0, {
     stiffness: 60,
     damping: 30,
@@ -18,10 +17,8 @@ export default function Loading() {
   );
 
   useEffect(() => {
-    // Simulate progress speed
     const timeout = setTimeout(() => {
       if (progress < 100) {
-        // Random increments to make it feel "real"
         const increment = Math.floor(Math.random() * 15) + 5;
         setProgress(Math.min(progress + increment, 100));
       }
@@ -37,7 +34,6 @@ export default function Loading() {
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black">
       <div className="flex flex-col items-start">
-        {/* Progress Number */}
         <div className="flex items-baseline gap-2">
           <motion.span 
             className="text-8xl md:text-9xl font-bold tracking-tighter text-white tabular-nums"
@@ -47,7 +43,6 @@ export default function Loading() {
           <span className="text-3xl font-medium text-zinc-500">%</span>
         </div>
 
-        {/* Minimalist Progress Bar */}
         <div className="relative mt-4 h-1 w-64 overflow-hidden rounded-full bg-zinc-800">
           <motion.div
             className="absolute inset-y-0 left-0 bg-white"
@@ -57,7 +52,6 @@ export default function Loading() {
           />
         </div>
 
-        {/* Status Text */}
         <motion.p 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
