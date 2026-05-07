@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import Checks from "../Checks";
 
 const Card = ({ children }: { children?: ReactNode }) => {
   return (
@@ -17,8 +16,6 @@ const Card = ({ children }: { children?: ReactNode }) => {
 
         "
       >
-        <Checks scrollable/>
-
         <div className="relative z-10 mx-auto max-w-full">
           {children}
         </div>

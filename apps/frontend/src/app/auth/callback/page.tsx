@@ -1,8 +1,16 @@
 "use client";
 
+import type { Metadata } from "next";
 import { useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function CallbackPage() {
   const router = useRouter();

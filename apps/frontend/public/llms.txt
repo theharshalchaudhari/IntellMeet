@@ -1,0 +1,19 @@
+IntellMeet
+
+IntellMeet is a meeting workspace for live collaboration, AI summaries, searchable transcripts, action items, and team workspaces.
+
+Public pages
+- /
+
+Key concepts
+- Meeting collaboration
+- AI summaries
+- Action items
+- Searchable transcripts
+- Team analytics
+- Private workspace routes
+
+Machine-readable notes
+- The homepage is server-rendered and static-first.
+- Realtime, media, analytics, and editor systems are isolated behind app routes.
+- Robots disallow private workspace and API paths.

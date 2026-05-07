@@ -1,31 +1,9 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 export default function DashboardPage() {
-  const [needsOnboarding, setNeedsOnboarding] = useState(true);
-
   return (
-    <div>
-      <h1>Dashboard</h1>
-
-      {needsOnboarding && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.7)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 50,
-          }}
-        >
-          <div style={{ background: "#111", padding: "20px" }}>
-            Complete Profile to Continue
-          </div>
-        </div>
-      )}
+    <div className="flex min-h-[30vh] items-center justify-center px-6 py-16">
+      <div className="rounded-2xl border border-border/60 bg-card px-5 py-4 text-sm text-muted-foreground">
+        Loading dashboard…
+      </div>
     </div>
   );
 }

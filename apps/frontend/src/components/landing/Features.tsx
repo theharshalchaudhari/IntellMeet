@@ -1,15 +1,11 @@
-'use client';
-
-import Image from 'next/image';
-import Magnetic from '../magnetic';
-import { GsapButton } from '../ui/Gsapbutton';
+import Image from "next/image";
 import {
+  BarChart3,
   Headphones,
   Puzzle,
   Sparkles,
   Users,
-  BarChart3,
-} from 'lucide-react';
+} from "lucide-react";
 
 const features = [
   {
@@ -42,19 +38,15 @@ const features = [
 export default function Features() {
   return (
     <section className="w-full px-6 md:px-10">
-      <h1 className="text-4xl font-medium leading-[0.92] tracking-[-0.065em] text-foreground md:text-7xl">
+      <h2 className="text-4xl font-medium leading-[0.92] tracking-[-0.065em] text-foreground md:text-7xl">
         Workspace For Productive Meetings
-      </h1>
+      </h2>
 
-      <div className="relative z-[100] mx-20 mt-7">
-        <Magnetic>
-          <GsapButton className="h-30 w-90 text-3xl">
-            Get Started
-          </GsapButton>
-        </Magnetic>
+      <div className="mt-7 inline-flex rounded-full border border-border bg-primary px-8 py-4 text-xl font-semibold text-primary-foreground">
+        Get Started
       </div>
 
-      <div className="relative -mt-36 w-full">
+      <div className="relative mt-12 w-full">
         <Image
           src="/icons/Folder.svg"
           alt="Folder"
@@ -64,7 +56,7 @@ export default function Features() {
           priority
         />
 
-        <div className="absolute inset-0 flex items-end justify-between px-[7%] pb-[5.5%]">
+          <div className="absolute inset-0 flex items-end justify-between px-[7%] pb-[5.5%]">
           <div className="w-[28%] rounded-[2rem] bg-[#ECECEC] p-7">
             <h2 className="mb-8 text-[4rem] font-medium leading-[0.9] tracking-[-0.075em] text-black">
               Add widget

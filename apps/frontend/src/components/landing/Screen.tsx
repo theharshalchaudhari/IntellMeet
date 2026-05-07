@@ -1,11 +1,9 @@
-import React from 'react'
-
 const Screen = () => {
   return (
-    <div>
-        <div className="h-screen w-full bg-red-500 text-white flex items-center justify-center text-3xl font-bold">HI</div>
-        <div className="h-screen w-full bg-blue-500 text-white flex items-center justify-center text-3xl font-bold">BLUE</div>
-        <div className="h-screen w-full bg-green-500 text-white flex items-center justify-center text-3xl font-bold">GREEN</div>
+    <div className="grid gap-6 md:grid-cols-3">
+      <div className="rounded-3xl border border-border bg-card p-8 text-lg font-medium text-foreground">Meet</div>
+      <div className="rounded-3xl border border-border bg-card p-8 text-lg font-medium text-foreground">Summarize</div>
+      <div className="rounded-3xl border border-border bg-card p-8 text-lg font-medium text-foreground">Act</div>
     </div>
   )
 }

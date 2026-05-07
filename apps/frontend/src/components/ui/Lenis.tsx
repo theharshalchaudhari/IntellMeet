@@ -1,37 +1,55 @@
 "use client";
 
 import { ReactLenis, useLenis } from "lenis/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useEffect, useCallback, useRef } from "react";
-
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
 
 export default function Lenis({ children }: { children: React.ReactNode }) {
   const lenis = useLenis();
   const tickerCallbackRef = useRef<((time: number) => void) | null>(null);
+  const gsapLoadedRef = useRef(false);
 
   useEffect(() => {
-    if (!lenis) return;
+    if (!lenis || gsapLoadedRef.current) return;
 
-    lenis.on("scroll", ScrollTrigger.update);
+    const loadGsap = async () => {
+      try {
+        const gsap = await import("gsap");
+        const { ScrollTrigger } = await import("gsap/ScrollTrigger");
 
-    // Create a stable callback reference
-    const tickerCallback = (time: number) => {
-      lenis.raf(time * 1000);
+        if (typeof window !== "undefined") {
+          gsap.default.registerPlugin(ScrollTrigger);
+        }
+
+        lenis.on("scroll", ScrollTrigger.update);
+
+        const tickerCallback = (time: number) => {
+          lenis.raf(time * 1000);
+        };
+        tickerCallbackRef.current = tickerCallback;
+
+        gsap.default.ticker.add(tickerCallback);
+        gsap.default.ticker.lagSmoothing(0);
+
+        gsapLoadedRef.current = true;
+      } catch (e) {
+        console.error("Failed to load GSAP", e);
+      }
     };
-    tickerCallbackRef.current = tickerCallback;
 
-    gsap.ticker.add(tickerCallback);
-    gsap.ticker.lagSmoothing(0);
+    loadGsap();
 
     return () => {
-      // Remove using the exact same function reference
       if (tickerCallbackRef.current) {
-        gsap.ticker.remove(tickerCallbackRef.current);
-        tickerCallbackRef.current = null;
+        const unloadGsap = async () => {
+          try {
+            const gsap = await import("gsap");
+            gsap.default.ticker.remove(tickerCallbackRef.current!);
+            tickerCallbackRef.current = null;
+          } catch (e) {
+            console.error("Failed to unload GSAP", e);
+          }
+        };
+        unloadGsap();
       }
     };
   }, [lenis]);
