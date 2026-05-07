@@ -5,9 +5,11 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import { cn } from "@/lib/utils";
 import { Header } from "@/components/common/Header";
 import { RocketPreloader } from "@/components/landing/Preloader";
+import PreloaderShell from "@/components/landing/PreloaderShell";
 import Checks from "@/components/Checks";
 import StickyCursor from "@/components/cursor/StickyCursor";
 import Lenis from "@/components/ui/Lenis";
+import { PerformanceInit } from "@/components/PerformanceInit";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -32,6 +34,8 @@ export default function RootLayout({
       className={cn("antialiased", poppins.variable, fontMono.variable)}
     >
       <body className="bg-background text-foreground font-sans">
+        <PerformanceInit />
+        <PreloaderShell />
         <Lenis>
           <StickyCursor />
           <RocketPreloader />

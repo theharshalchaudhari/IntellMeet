@@ -1,7 +1,8 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useRef } from 'react'
 import gsap from 'gsap'
+import { useGsapContext } from '@/lib/gsapSafety'
 import { cn } from '@/lib/utils'
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -39,7 +40,7 @@ export function GsapButton({
   const buttonRef = useRef<HTMLButtonElement>(null)
   const flairRef = useRef<HTMLSpanElement>(null)
 
-  useEffect(() => {
+  useGsapContext(() => {
     const button = buttonRef.current
     const flair = flairRef.current
     if (!button || !flair) return

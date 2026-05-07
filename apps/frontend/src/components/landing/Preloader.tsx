@@ -21,9 +21,10 @@ export function RocketPreloader() {
     const loader = loaderRef.current;
     if (!val || !wrap || !loader) return;
 
-    let visualCount  = 0;
+    let visualCount = 0;
     let actualProgress = 0;
-    let velocity  = 0;
+    let prevActual = 0;
+    let killTimeout: number | undefined;
     let rafId: number;
     let done = false;
 
@@ -41,12 +42,23 @@ export function RocketPreloader() {
       cancelAnimationFrame(rafId);
       observer.disconnect();
 
+      // show final value
       val!.innerText = "100";
       wrap!.classList.add("vibrate-rocket");
 
+      // remove server-rendered shell if present
+      try {
+        const shell = document.getElementById("preloader-shell");
+        if (shell) {
+          shell.style.opacity = "0";
+          shell.style.transform = "translateY(-100%)";
+          setTimeout(() => shell.remove(), 900);
+        }
+      } catch (_) {}
+
       setTimeout(() => {
         loader!.style.transform = "translateY(-100%)";
-        loader!.style.opacity   = "0";
+        loader!.style.opacity = "0";
         setTimeout(() => {
           if (loader) loader.style.display = "none";
         }, 900);
@@ -56,31 +68,42 @@ export function RocketPreloader() {
     function sync() {
       if (done) return;
 
-      const diff = actualProgress - visualCount;
-      if (diff > 0) {
-        velocity    += 0.04;
-        visualCount += diff * 0.09 + velocity;
-      } else {
-        velocity = Math.max(0, velocity - 0.01);
-      }
+      // Target is the rounded authoritative progress.
+      const target = Math.max(0, Math.min(100, Math.round(actualProgress)));
 
-      visualCount = Math.min(visualCount, 99.9);
-      val!.innerText = String(Math.floor(visualCount));
+      // Step visualCount toward target one integer at a time for exact display.
+      if (visualCount < target) visualCount += 1;
+      else if (visualCount > target) visualCount -= 1;
 
-      if (visualCount > 5) {
+      val!.innerText = String(visualCount);
+
+      // Compute how fast the authoritative progress is changing to affect vibration.
+      const velocity = Math.abs(actualProgress - prevActual);
+      if (visualCount > 0) {
         wrap!.classList.add("vibrate-rocket");
-        wrap!.style.filter = `blur(${Math.min(velocity / 14, 3)}px)`;
+        // Scale vibration/blur by velocity; multiply to make effect noticeable.
+        wrap!.style.filter = `blur(${Math.min(velocity * 1.5, 6)}px)`;
       }
 
-      if (document.readyState === "complete" && visualCount >= 99) {
+      // If authoritative progress reached 100 and visual reached 100, finalize.
+      if (actualProgress >= 100 && visualCount >= 100) {
         dismiss();
         return;
       }
 
+      prevActual = actualProgress;
       rafId = requestAnimationFrame(sync);
     }
 
     rafId = requestAnimationFrame(sync);
+
+    // fail-safe: ensure loader finishes after a maximum wait
+    killTimeout = window.setTimeout(() => {
+      if (!done) {
+        // slowly step to 100 if actualProgress is low
+        actualProgress = Math.max(actualProgress, 100);
+      }
+    }, 6000) as unknown as number;
 
     const onLoad = () => {
       actualProgress = 100;
@@ -88,8 +111,9 @@ export function RocketPreloader() {
     };
 
     if (document.readyState === "complete") {
+      // don't immediately dismiss; allow stepping behavior to run so numbers animate
+      // set authoritative progress and let sync step visualCount to 100
       actualProgress = 100;
-      setTimeout(dismiss, 400);
     } else {
       window.addEventListener("load", onLoad, { once: true });
     }
@@ -98,6 +122,7 @@ export function RocketPreloader() {
       cancelAnimationFrame(rafId);
       observer.disconnect();
       window.removeEventListener("load", onLoad);
+      if (killTimeout) clearTimeout(killTimeout);
     };
   }, [mounted]);
 

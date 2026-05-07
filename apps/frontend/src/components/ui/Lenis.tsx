@@ -3,7 +3,7 @@
 import { ReactLenis, useLenis } from "lenis/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useEffect } from "react";
+import { useEffect, useCallback, useRef } from "react";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -11,22 +11,28 @@ if (typeof window !== "undefined") {
 
 export default function Lenis({ children }: { children: React.ReactNode }) {
   const lenis = useLenis();
+  const tickerCallbackRef = useRef<((time: number) => void) | null>(null);
 
   useEffect(() => {
     if (!lenis) return;
 
     lenis.on("scroll", ScrollTrigger.update);
 
-    gsap.ticker.add((time) => {
+    // Create a stable callback reference
+    const tickerCallback = (time: number) => {
       lenis.raf(time * 1000);
-    });
+    };
+    tickerCallbackRef.current = tickerCallback;
 
+    gsap.ticker.add(tickerCallback);
     gsap.ticker.lagSmoothing(0);
 
     return () => {
-      gsap.ticker.remove((time) => {
-        lenis.raf(time * 1000);
-      });
+      // Remove using the exact same function reference
+      if (tickerCallbackRef.current) {
+        gsap.ticker.remove(tickerCallbackRef.current);
+        tickerCallbackRef.current = null;
+      }
     };
   }, [lenis]);
 

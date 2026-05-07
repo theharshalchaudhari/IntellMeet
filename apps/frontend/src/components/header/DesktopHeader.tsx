@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGsapContext, killAllScrollTriggers } from "@/lib/gsapSafety";
 import { Logo } from "@/components/common/Logo";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import GoogleAuthButton from "@/components/common/GoogleAuthButton";
@@ -60,22 +61,20 @@ export default function DesktopHeader() {
     };
   }, [onScroll]);
 
-  useEffect(() => {
+  useGsapContext(() => {
     const el = navRef.current;
     if (!el) return;
-    const ctx = gsap.context(() => {
-      gsap.timeline({
-        scrollTrigger: {
-          trigger: document.body,
-          start: "top top",
-          end: "200px top",
-          scrub: true,
-        },
-      })
-        .to(el, { width: "1024px", paddingLeft: "1.5rem", paddingRight: "1.5rem", ease: "none" }, 0)
-        .to(el, { scale: 1, ease: "none" }, 0);
-    });
-    return () => ctx.revert();
+
+    gsap.timeline({
+      scrollTrigger: {
+        trigger: document.body,
+        start: "top top",
+        end: "200px top",
+        scrub: true,
+      },
+    })
+      .to(el, { width: "1024px", paddingLeft: "1.5rem", paddingRight: "1.5rem", ease: "none" }, 0)
+      .to(el, { scale: 1, ease: "none" }, 0);
   }, []);
 
   return (
