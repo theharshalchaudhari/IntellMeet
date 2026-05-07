@@ -9,16 +9,17 @@ const Card = ({ children }: { children?: ReactNode }) => {
         className="
           relative
           overflow-hidden
-          mt-[-5vh]
+          mt-[-40]
           min-h-screen
           border-t-[2px] border-foreground
           bg-background
           rounded-t-[4rem]
+
         "
       >
         <Checks scrollable/>
 
-        <div className="relative z-10 max-w-full mx-auto">
+        <div className="relative z-10 mx-auto max-w-full">
           {children}
         </div>
       </section>

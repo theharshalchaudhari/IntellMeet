@@ -1,56 +1,40 @@
 "use client";
 
-import { useEffect } from "react";
+import { useRef } from "react";
+import { useLenis } from "lenis/react";
 import { HeroIllustration } from "../svg/HeroIllustration";
 
-const useHeroFade = () => {
-  useEffect(() => {
-    const el = document.getElementById("hero-fade");
-    const overlay = document.getElementById("hero-overlay");
-    if (!el) return;
-
-    let ticking = false;
-
-    const update = () => {
-      const scrollY = window.scrollY;
-      const vh = window.innerHeight;
-      const progress = Math.min(scrollY / (vh * 0.8), 1);
-      const opacity = 1 - progress * progress;
-      el.style.opacity = String(Math.max(opacity, 0));
-      if (overlay) {
-        overlay.style.opacity = String(progress);
-      }
-      ticking = false;
-    };
-
-    const onScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(update);
-        ticking = true;
-      }
-    };
-
-    window.addEventListener("scroll", onScroll);
-    update();
-
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-};
-
 const Hero = () => {
-  useHeroFade();
+  const fadeRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Hook directly into Lenis's smooth scroll instance instead of native window.scroll
+  useLenis(({ scroll }) => {
+    if (!fadeRef.current) return;
+
+    const vh = window.innerHeight;
+    const progress = Math.min(scroll / (vh * 0.8), 1);
+    const opacity = 1 - progress * progress;
+    
+    fadeRef.current.style.opacity = String(Math.max(opacity, 0));
+    
+    if (overlayRef.current) {
+      overlayRef.current.style.opacity = String(progress);
+    }
+  });
 
   return (
-<section className="sticky top-0 h-screen w-full overflow-hidden px-6 flex justify-center mt-[-6rem]">
-      <div id="hero-fade" className="absolute inset-0 will-change-opacity">
-
+    <section className="sticky top-0 h-screen w-full overflow-hidden px-6 flex justify-center mt-[-6rem]">
+      <div 
+        ref={fadeRef} 
+        className="absolute inset-0 will-change-opacity"
+      >
         <div
-          id="hero-overlay"
+          ref={overlayRef}
           className="absolute inset-0 bg-background pointer-events-none opacity-0"
         />
 
         <div className="relative z-10 max-w-8xl text-center flex flex-col pt-40 items-center gap-6 mx-auto">
-
           <h1 className="text-4xl md:text-8xl tracking-tight text-foreground">
             Smart Meeting & <br />
             Collaboration Platform
@@ -75,7 +59,6 @@ const Hero = () => {
         <div className="absolute bottom-0 left-0 w-full pointer-events-none">
           <HeroIllustration className="w-full h-auto" />
         </div>
-
       </div>
     </section>
   );

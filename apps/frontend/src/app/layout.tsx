@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { Header } from "@/components/common/Header";
 import { RocketPreloader } from "@/components/landing/Preloader";
 import Checks from "@/components/Checks";
+import StickyCursor from "@/components/cursor/StickyCursor";
+import Lenis from "@/components/ui/Lenis";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -30,20 +32,22 @@ export default function RootLayout({
       className={cn("antialiased", poppins.variable, fontMono.variable)}
     >
       <body className="bg-background text-foreground font-sans">
-        <RocketPreloader />
+        <Lenis>
+          <StickyCursor />
+          <RocketPreloader />
 
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-            <Checks interactive showMask/>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Checks interactive showMask />
 
-
-          <Header />
-          <main className="relative z-10 pt-24">{children}</main>
-        </ThemeProvider>
+            <Header />
+            <main className="relative z-10 pt-24">{children}</main>
+          </ThemeProvider>
+        </Lenis>
       </body>
     </html>
   );
