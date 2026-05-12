@@ -18,7 +18,6 @@ export default function Lenis({ children }: { children: React.ReactNode }) {
 
     lenis.on("scroll", ScrollTrigger.update);
 
-    // Create a stable callback reference
     const tickerCallback = (time: number) => {
       lenis.raf(time * 1000);
     };
@@ -28,7 +27,6 @@ export default function Lenis({ children }: { children: React.ReactNode }) {
     gsap.ticker.lagSmoothing(0);
 
     return () => {
-      // Remove using the exact same function reference
       if (tickerCallbackRef.current) {
         gsap.ticker.remove(tickerCallbackRef.current);
         tickerCallbackRef.current = null;

@@ -8,7 +8,6 @@ const Hero = () => {
   const fadeRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Hook directly into Lenis's smooth scroll instance instead of native window.scroll
   useLenis(({ scroll }) => {
     if (!fadeRef.current) return;
 

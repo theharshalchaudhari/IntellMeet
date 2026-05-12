@@ -42,11 +42,8 @@ export function RocketPreloader() {
       cancelAnimationFrame(rafId);
       observer.disconnect();
 
-      // show final value
       val!.innerText = "100";
       wrap!.classList.add("vibrate-rocket");
-
-      // remove server-rendered shell if present
       try {
         const shell = document.getElementById("preloader-shell");
         if (shell) {
@@ -68,24 +65,18 @@ export function RocketPreloader() {
     function sync() {
       if (done) return;
 
-      // Target is the rounded authoritative progress.
       const target = Math.max(0, Math.min(100, Math.round(actualProgress)));
 
-      // Step visualCount toward target one integer at a time for exact display.
       if (visualCount < target) visualCount += 1;
       else if (visualCount > target) visualCount -= 1;
 
       val!.innerText = String(visualCount);
 
-      // Compute how fast the authoritative progress is changing to affect vibration.
       const velocity = Math.abs(actualProgress - prevActual);
       if (visualCount > 0) {
         wrap!.classList.add("vibrate-rocket");
-        // Scale vibration/blur by velocity; multiply to make effect noticeable.
         wrap!.style.filter = `blur(${Math.min(velocity * 1.5, 6)}px)`;
       }
-
-      // If authoritative progress reached 100 and visual reached 100, finalize.
       if (actualProgress >= 100 && visualCount >= 100) {
         dismiss();
         return;
@@ -97,10 +88,8 @@ export function RocketPreloader() {
 
     rafId = requestAnimationFrame(sync);
 
-    // fail-safe: ensure loader finishes after a maximum wait
     killTimeout = window.setTimeout(() => {
       if (!done) {
-        // slowly step to 100 if actualProgress is low
         actualProgress = Math.max(actualProgress, 100);
       }
     }, 6000) as unknown as number;
@@ -111,8 +100,6 @@ export function RocketPreloader() {
     };
 
     if (document.readyState === "complete") {
-      // don't immediately dismiss; allow stepping behavior to run so numbers animate
-      // set authoritative progress and let sync step visualCount to 100
       actualProgress = 100;
     } else {
       window.addEventListener("load", onLoad, { once: true });

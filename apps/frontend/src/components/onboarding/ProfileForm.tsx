@@ -96,7 +96,6 @@ export default function ProfileForm() {
         </div>
       </div>
 
-      {/* RIGHT */}
       <div className="w-1/2 flex items-center justify-center px-16">
         <div className="max-w-md text-gray-700">
           <p className="text-5xl text-gray-300 mb-4">“</p>

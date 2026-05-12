@@ -5,15 +5,12 @@ import { motion, useMotionValue, useSpring } from 'framer-motion';
 export default function StickyCursor() {
   const [isHovered, setIsHovered] = useState(false);
   
-  // Size config
   const mainSize = 10;
   const trailSize = 28;
 
-  // Instant coordinates (No lag)
   const mouseX = useMotionValue(-100);
   const mouseY = useMotionValue(-100);
 
-  // Smooth springs ONLY applied to the trail
   const trailX = useSpring(mouseX, { damping: 25, stiffness: 400, mass: 0.2 });
   const trailY = useSpring(mouseY, { damping: 25, stiffness: 400, mass: 0.2 });
 
@@ -36,14 +33,12 @@ export default function StickyCursor() {
         const distanceX = clientX - center.x;
         const distanceY = clientY - center.y;
 
-        // Apply magnetic pull directly to the motion values
         mouseX.set(center.x + distanceX * 0.15);
         mouseY.set(center.y + distanceY * 0.15);
         
       } else {
         if (isHovered) setIsHovered(false);
 
-        // Instant 1:1 mouse tracking
         mouseX.set(clientX);
         mouseY.set(clientY);
       }
@@ -55,7 +50,6 @@ export default function StickyCursor() {
 
   return (
     <>
-      {/* The Trail (Follows slightly behind with the glow) */}
       <motion.div
         className="cursor-trail"
         animate={{
@@ -73,7 +67,6 @@ export default function StickyCursor() {
         }}
       />
 
-      {/* The Main Dot (Instant, zero-latency) */}
       <motion.div
         className="cursor-main"
         animate={{
