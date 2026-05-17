@@ -17,4 +17,4 @@ app.get("/", (_req, res) => {
   res.send("IntellMeet Backend Running");
 });
 
-export default app;
+export { app };

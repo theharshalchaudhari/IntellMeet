@@ -98,58 +98,78 @@ export default function Checks({
       needsDraw = true;
     };
 
-    const draw = () => {
-      raf = requestAnimationFrame(draw);
-
-      if (!needsDraw) return;
-      needsDraw = false;
-
-      const mwx = mouse.x;
-      const mwy = scrollable
-        ? mouse.y + window.scrollY
-        : mouse.y ;
-
-      c.clearRect(0, 0, W, H);
-
-      const half = gap / 2;
-      const radiusSq = radius * radius;
-      const totalH = scrollable ? docH : document.documentElement.scrollHeight;
-
-      for (let x = 0; x <= W; x += gap) {
-        for (let y = 0; y <= totalH; y += gap) {
-          const sy = scrollable ? y : y;
-          if (!scrollable && (sy < -gap || sy > H + gap)) continue;
-
-          let alpha = baseOpacity;
-          let [r, g, b] = baseRGB;
-
-          if (mouseActive) {
-            const dx = x - mwx;
-            const dy = y - mwy;
-            const d = dx * dx + dy * dy;
-
-            if (d < radiusSq) {
-              const t = 1 - Math.sqrt(d) / radius;
-              alpha += t * (activeOpacity - baseOpacity);
-              [r, g, b] = activeRGB;
-            }
-          }
-
-          c.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
-          c.lineWidth = lineWidth;
-
-          c.beginPath();
-          c.moveTo(x - half, sy - half);
-          c.lineTo(x + half, sy - half);
-          c.lineTo(x + half, sy + half);
-          c.lineTo(x - half, sy + half);
-          c.closePath();
-          c.stroke();
+    // animation loop that only runs while there's drawing requested.
+    const loop = () => {
+      raf = requestAnimationFrame(() => {
+        if (!needsDraw) {
+          raf = 0;
+          return;
         }
-      }
+
+        needsDraw = false;
+
+        const mwx = mouse.x;
+        const mwy = scrollable ? mouse.y + window.scrollY : mouse.y;
+
+        c.clearRect(0, 0, W, H);
+
+        const half = gap / 2;
+        const radiusSq = radius * radius;
+        const totalH = Math.max(0, scrollable ? docH : H);
+
+        // compute visible Y range and limit iteration to that window
+        const scrollTop = window.scrollY;
+        const visibleTop = Math.max(0, scrollable ? scrollTop - gap : 0);
+        const visibleBottom = scrollable ? Math.min(totalH, scrollTop + window.innerHeight + gap) : H + gap;
+
+        const startY = Math.floor(visibleTop / gap) * gap;
+        const endY = Math.ceil(visibleBottom / gap) * gap;
+
+        for (let x = 0; x <= W; x += gap) {
+          for (let y = startY; y <= endY; y += gap) {
+            if (y < 0 || y > totalH) continue;
+
+            let alpha = baseOpacity;
+            let [r, g, b] = baseRGB;
+
+            if (mouseActive) {
+              const dx = x - mwx;
+              const dy = y - mwy;
+              const d = dx * dx + dy * dy;
+
+              if (d < radiusSq) {
+                const t = 1 - Math.sqrt(d) / radius;
+                alpha += t * (activeOpacity - baseOpacity);
+                [r, g, b] = activeRGB;
+              }
+            }
+
+            c.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
+            c.lineWidth = lineWidth;
+
+            c.beginPath();
+            c.moveTo(x - half, y - half);
+            c.lineTo(x + half, y - half);
+            c.lineTo(x + half, y + half);
+            c.lineTo(x - half, y + half);
+            c.closePath();
+            c.stroke();
+          }
+        }
+
+        // continue looping if new work arrived while drawing
+        if (needsDraw) {
+          loop();
+        } else {
+          raf = 0;
+        }
+      });
     };
 
-    const triggerDraw = () => (needsDraw = true);
+    const triggerDraw = () => {
+      needsDraw = true;
+      if (!raf) loop();
+    };
 
     const onMove = (e: MouseEvent) => {
       mouse.x = e.clientX;
@@ -177,7 +197,7 @@ export default function Checks({
     });
 
     init();
-    draw();
+    triggerDraw();
 
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseleave", onLeave);

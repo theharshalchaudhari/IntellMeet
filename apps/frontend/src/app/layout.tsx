@@ -3,10 +3,8 @@ import "./globals.css";
 
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { cn } from "@/lib/utils";
-import { Header } from "@/components/common/Header";
 import { RocketPreloader } from "@/components/landing/Preloader";
 import Checks from "@/components/Checks";
-import StickyCursor from "@/components/cursor/StickyCursor";
 import Lenis from "@/components/ui/Lenis";
 
 const poppins = Poppins({
@@ -33,7 +31,6 @@ export default function RootLayout({
     >
       <body className="bg-background text-foreground font-sans">
         <Lenis>
-          <StickyCursor />
           <RocketPreloader />
 
           <ThemeProvider
@@ -44,8 +41,7 @@ export default function RootLayout({
           >
             <Checks interactive showMask />
 
-            <Header />
-            <main className="relative z-10 pt-24">{children}</main>
+            <main className="relative z-10">{children}</main>
           </ThemeProvider>
         </Lenis>
       </body>

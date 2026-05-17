@@ -6,6 +6,27 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const getGoogleProfileData = (user: any) => {
+  const identityData = user?.identities?.[0]?.identity_data || {};
+
+  return {
+    name:
+      user?.user_metadata?.full_name ||
+      user?.user_metadata?.name ||
+      identityData.full_name ||
+      identityData.name ||
+      null,
+    googlePhoto:
+      user?.user_metadata?.avatar_url ||
+      user?.user_metadata?.picture ||
+      user?.user_metadata?.picture_url ||
+      identityData.avatar_url ||
+      identityData.picture ||
+      identityData.picture_url ||
+      null,
+  };
+};
+
 export const googleLogin = async (req: Request, res: Response) => {
   try {
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -50,13 +71,24 @@ export const syncUser = async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Invalid token" });
     }
 
-    await supabase.from("profiles").upsert({
+    const googleProfileData = getGoogleProfileData(user);
+
+    const upsertData = {
       id: user.id,
       email: user.email,
-      name: user.user_metadata?.name || null,
-      google_photo: user.user_metadata?.avatar_url || null,
-      profile_status: "active",
-    });
+      name: googleProfileData.name,
+      google_photo: googleProfileData.googlePhoto,
+      profile_status: "pending",
+    };
+
+    const { error: upsertError } = await supabase
+      .from("profiles")
+      .upsert([upsertData], { onConflict: "id" });
+
+    if (upsertError) {
+      console.error("Profile upsert error:", upsertError);
+      return res.status(500).json({ error: "Failed to sync user profile" });
+    }
 
     await supabase.from("auth_logs").insert({
       user_id: user.id,
