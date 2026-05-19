@@ -1,8 +1,6 @@
-export * from './hooks/theme-manager';
+export * from './runtime/theme';
+
 export { THEME_SCRIPT }
   from './runtime/theme-script';
-export * from './runtime/load-theme';
-export * from './runtime/apply-theme';
 
-export * from './registry/theme-urls';
-export * from './runtime/theme';
+export * from './hooks/theme-manager';

@@ -8,7 +8,25 @@ import { loadTheme }
 
 export function Theme() {
   useEffect(() => {
+    // Initial load
     loadTheme();
+
+    // BFCache restore
+    const handlePageShow = () => {
+      loadTheme();
+    };
+
+    window.addEventListener(
+      'pageshow',
+      handlePageShow
+    );
+
+    return () => {
+      window.removeEventListener(
+        'pageshow',
+        handlePageShow
+      );
+    };
   }, []);
 
   return null;

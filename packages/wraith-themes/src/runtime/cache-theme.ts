@@ -1,16 +1,13 @@
-import type { WraithTheme }
-  from '../types/theme';
-
 import { STORAGE_KEYS }
   from '../constants/storage';
 
 export function cacheTheme(
-  theme: WraithTheme,
+  css: string,
   url: string
 ) {
   localStorage.setItem(
-    STORAGE_KEYS.theme,
-    JSON.stringify(theme)
+    STORAGE_KEYS.themeCss,
+    css
   );
 
   localStorage.setItem(
@@ -19,23 +16,10 @@ export function cacheTheme(
   );
 }
 
-export function getCachedTheme() {
-  const cached =
-    localStorage.getItem(
-      STORAGE_KEYS.theme
-    );
-
-  if (!cached) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(
-      cached
-    ) as WraithTheme;
-  } catch {
-    return null;
-  }
+export function getCachedThemeCss() {
+  return localStorage.getItem(
+    STORAGE_KEYS.themeCss
+  );
 }
 
 export function getCachedThemeUrl() {

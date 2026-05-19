@@ -1,4 +1,7 @@
 export const STORAGE_KEYS = {
-  theme: 'wraith-theme-cache',
-  themeUrl: 'wraith-theme-url',
+  themeCss:
+    'wraith-theme-css',
+
+  themeUrl:
+    'wraith-theme-url',
 };

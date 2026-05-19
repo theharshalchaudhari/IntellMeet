@@ -1,75 +1,111 @@
-import defaultTheme
-  from '../themes/default.json';
-
-import { applyTheme }
-  from './apply-theme';
+import { THEMES }
+  from '../registry/theme-urls';
 
 import {
-  getCachedTheme,
-  getCachedThemeUrl,
   cacheTheme,
+  getCachedThemeCss,
+  getCachedThemeUrl,
 } from './cache-theme';
 
-import { fetchTheme }
-  from './fetch-theme';
+import { convertThemeToCss }
+  from './convert-theme';
 
-const DEFAULT_THEME_URL =
-  'https://tweakcn.com/r/themes/amber-minimal.json';
+function injectTheme(
+  css: string
+) {
+  const existing =
+    document.getElementById(
+      'wraith-theme'
+    );
+
+  if (existing) {
+    existing.remove();
+  }
+
+  const style =
+    document.createElement('style');
+
+  style.id = 'wraith-theme';
+
+  style.textContent = css;
+
+  document.head.appendChild(
+    style
+  );
+}
+
+async function fetchTheme(
+  url: string
+) {
+  const response =
+    await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(
+      'Theme fetch failed'
+    );
+  }
+
+  return response.json();
+}
 
 export async function loadTheme() {
-  const cachedTheme =
-    getCachedTheme();
+  const cachedCss =
+    getCachedThemeCss();
 
-  if (cachedTheme) {
-    applyTheme(cachedTheme);
+  const cachedUrl =
+    getCachedThemeUrl();
 
-    const cachedUrl =
-      getCachedThemeUrl();
+  if (cachedCss) {
+    injectTheme(cachedCss);
+  }
 
-    if (!cachedUrl) {
-      return;
-    }
-
+  if (cachedUrl) {
     try {
-      const freshTheme =
+      const theme =
         await fetchTheme(
           cachedUrl
         );
 
+      const css =
+        convertThemeToCss(
+          theme
+        );
+
+      injectTheme(css);
+
       cacheTheme(
-        freshTheme,
+        css,
         cachedUrl
       );
 
-      applyTheme(freshTheme);
-    } catch {
-      console.error(
-        'Theme refresh failed'
-      );
+      return;
+    } catch (error) {
+      console.error(error);
     }
-
-    return;
   }
 
   try {
-    const remoteTheme =
+    const defaultThemeUrl =
+      THEMES.default;
+
+    const theme =
       await fetchTheme(
-        DEFAULT_THEME_URL
+        defaultThemeUrl
       );
 
+    const css =
+      convertThemeToCss(
+        theme
+      );
+
+    injectTheme(css);
+
     cacheTheme(
-      remoteTheme,
-      DEFAULT_THEME_URL
+      css,
+      defaultThemeUrl
     );
-
-    applyTheme(remoteTheme);
-
-    return;
-  } catch {
-    console.error(
-      'Remote theme failed'
-    );
+  } catch (error) {
+    console.error(error);
   }
-
-  applyTheme(defaultTheme);
 }
