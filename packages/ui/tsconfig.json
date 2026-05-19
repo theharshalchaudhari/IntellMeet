@@ -1,9 +1,34 @@
 {
-  "extends": "@repo/typescript-config/react-library.json",
+  "extends": "@wraith/typescript-config/react-library.json",
+
   "compilerOptions": {
+    "rootDir": ".",
     "outDir": "dist",
+
+    "paths": {
+      "@wraith/ui": ["./index.ts"],
+      "@wraith/ui/*": ["./*"],
+
+      "@wraith/ui/shadcn": ["./shadcn"],
+      "@wraith/ui/shadcn/*": ["./shadcn/*"],
+
+      "@wraith/ui/shared": ["./shared"],
+      "@wraith/ui/shared/*": ["./shared/*"],
+
+      "@wraith/ui/lib": ["./lib"],
+      "@wraith/ui/lib/*": ["./lib/*"]
+    },
+
     "strictNullChecks": true
   },
-  "include": ["src"],
+
+  "include": [
+    ".",
+    "shadcn",
+    "shared",
+    "lib",
+    "index.ts"
+  ],
+
   "exclude": ["node_modules", "dist"]
 }
