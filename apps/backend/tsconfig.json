@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
 
     "rootDir": "./src",
     "outDir": "./dist",
 
     "baseUrl": "./src",
+    "jsx": "react-jsx",
     "paths": {
       "@/*": ["*"],
       "@/controllers/*": ["controllers/*"],
@@ -21,8 +23,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
 
-    "moduleResolution": "node",
-    "types": ["node"],
+    "types": ["node", "vite/client"],
 
     "ignoreDeprecations": "6.0"
   },

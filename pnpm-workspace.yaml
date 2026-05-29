@@ -1,5 +1,10 @@
 packages:
   - "apps/*"
   - "packages/*"
+  - "packages/config/*"
 allowBuilds:
+  bcrypt: true
+  esbuild: true
   msw: true
+  sharp: true
+  unrs-resolver: true

@@ -119,7 +119,7 @@ export function GsapButton({
       className={cn(gsapButtonVariants({ variant, size }), className)}
       {...props}
     >
-      {/* flair */}
+      {}
       <span
         ref={flairRef}
         className="absolute inset-0 pointer-events-none scale-0"
@@ -127,7 +127,7 @@ export function GsapButton({
         <span className="absolute left-0 top-0 w-[170%] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground" />
       </span>
 
-      {/* label */}
+      {}
       <span className="relative z-10 mix-blend-difference">
   {children}
 </span>

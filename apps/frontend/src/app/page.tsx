@@ -11,20 +11,9 @@ import { Header } from "@/components/common/Header";
 
 
 export default function Landing() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-
-  useEffect(() => {
-    // Clean up OAuth error params from URL
-    if (searchParams.has("error") || searchParams.has("error_code") || searchParams.has("auth")) {
-      router.replace("/");
-    }
-  }, [searchParams, router]);
-
   return (
-    <main className="pt-24">
+    <main>
       <Header />
-
       <Hero />
 
       <Card>

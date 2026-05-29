@@ -9,6 +9,7 @@ import { supabaseClient } from "@/lib/supabaseClient";
 interface UserProfile {
   email: string;
   name: string;
+  username?: string | null;
   google_photo: string;
   user_photo?: string | null;
   photo?: string | null;
@@ -47,6 +48,7 @@ export default function ProfileForm() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [username, setUsername] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,7 +69,13 @@ export default function ProfileForm() {
 
       setChecking(true);
       try {
-        const res = await fetch(`/api/user/check-username?u=${encodeURIComponent(username)}`);
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        
+        const res = await fetch(`/api/user/check-username?u=${encodeURIComponent(username)}`, {
+          headers: session?.access_token ? {
+            Authorization: `Bearer ${session.access_token}`
+          } : {}
+        });
         const data = await res.json();
         setAvailable(data.available);
       } catch (error) {
@@ -112,13 +120,23 @@ export default function ProfileForm() {
       const profileData = payload?.profile as UserProfile | null;
 
       if (!profileData) {
-        console.warn("No profile data found for user", session.user.id);
         setLoading(false);
         return;
       }
 
-      setProfile(profileData as UserProfile);
-      setPreviewUrl(profileData.photo || profileData.user_photo || profileData.google_photo || "");
+      setProfile(profileData);
+      
+      if (profileData.username) {
+        setUsername(profileData.username);
+      }
+
+      const photoToShow = profileData.user_photo || profileData.google_photo || "";
+      setPreviewUrl(photoToShow);
+      
+      if (profileData.user_photo) {
+        setUploadedPhotoUrl(profileData.user_photo);
+      }
+      
     } catch (error) {
       console.error("Error fetching profile:", error);
       setLoading(false);
@@ -128,17 +146,14 @@ export default function ProfileForm() {
   };
 
   const handleFileChange = (files: File[]) => {
+    if (files.length === 0) return;
+    
+    const file = files[0];
+    
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
     setSelectedFiles(files);
-    if (files.length > 0) {
-      const url = URL.createObjectURL(files[0]);
-      setUploadedPhotoUrl("");
-      setPreviewUrl((current) => {
-        if (current && current.startsWith("blob:")) {
-          URL.revokeObjectURL(current);
-        }
-        return url;
-      });
-    }
+    setUploadedPhotoUrl(""); 
   };
 
   useEffect(() => {
@@ -162,12 +177,27 @@ export default function ProfileForm() {
         throw new Error("No session found");
       }
 
-      let photoUrl = uploadedPhotoUrl || profile?.user_photo || profile?.google_photo || null;
+      let photoUrl = uploadedPhotoUrl || profile?.user_photo || null;
 
       if (selectedFiles.length > 0 && selectedFiles[0] && !uploadedPhotoUrl) {
-        photoUrl = await uploadPhotoToCloudinary(selectedFiles[0]);
-        setUploadedPhotoUrl(photoUrl);
-        setPreviewUrl(photoUrl);
+        setUploading(true);
+        try {
+          photoUrl = await uploadPhotoToCloudinary(selectedFiles[0]);
+          setUploadedPhotoUrl(photoUrl);
+          setPreviewUrl(photoUrl);
+        } catch (error) {
+          setSubmitting(false);
+          setUploading(false);
+          return;
+        } finally {
+          setUploading(false);
+        }
+      }
+
+      if (!photoUrl) {
+        alert("Please upload a profile photo.");
+        setSubmitting(false);
+        return;
       }
 
       const res = await fetch("/api/user/complete-profile", {
@@ -178,7 +208,7 @@ export default function ProfileForm() {
         },
         body: JSON.stringify({
           username,
-          photoUrl,
+          photoUrl: photoUrl,
         }),
       });
 
@@ -188,7 +218,6 @@ export default function ProfileForm() {
 
       window.location.href = "/dashboard";
     } catch (error) {
-      console.error("Error completing profile:", error);
       setSubmitting(false);
     }
   };
@@ -196,97 +225,120 @@ export default function ProfileForm() {
   if (loading) {
     return (
       <div className="min-h-[100vh] flex items-center justify-center">
-        <div className="text-foreground">Loading profile...</div>
+        <div className="text-foreground text-xl">Loading your profile...</div>
       </div>
     );
   }
 
-  const avatarPreview = previewUrl || "https://github.com/shadcn.png";
+  const avatarPreview = previewUrl || (profile?.google_photo) || "https://github.com/shadcn.png";
+  const isSubmitDisabled = !available || !username.trim() || submitting || uploading || (!uploadedPhotoUrl && selectedFiles.length === 0 && !profile?.user_photo);
 
   return (
-    <div className="min-h-[100vh] flex">
-      <div className="flex w-1/2 flex-col justify-center items-center glass px-10">
+    <div className="min-h-[100vh] flex bg-background">
+      <div className="flex w-1/2 flex-col justify-center items-center glass px-10 border-r border-border/50">
         <div className="relative z-10 max-w-md text-center flex flex-col items-center gap-6 mx-auto">
-          <h1 className="text-4xl md:text-5xl tracking-tight text-foreground">
-            Complete Profile
-          </h1>
+          <div className="space-y-2">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
+              Complete Profile
+            </h1>
+            <p className="text-muted-foreground">Customize how you appear to others</p>
+          </div>
 
-          <FileUpload
-            value={selectedFiles}
-            onValueChange={handleFileChange}
-            accept="image/*"
-            maxFiles={1}
-            maxSize={2 * 1024 * 1024}
-          >
-            <FileUploadTrigger asChild>
-              <button className="group relative cursor-pointer rounded-full">
-                <Avatar className="size-40">
-                  <AvatarImage src={avatarPreview} alt="Profile" />
-                  <AvatarFallback>Profile</AvatarFallback>
-                </Avatar>
-                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                  <Camera className="size-6 text-white" />
+          <div className="flex flex-col items-center gap-2">
+            <FileUpload
+              value={selectedFiles}
+              onValueChange={handleFileChange}
+              accept="image/*"
+              maxFiles={1}
+              maxSize={2 * 1024 * 1024}
+            >
+              <FileUploadTrigger asChild>
+                <div className="group relative cursor-pointer rounded-full p-1 border-2 border-primary/20 hover:border-primary transition-colors">
+                  <Avatar className="size-40 border-4 border-background">
+                    <AvatarImage src={avatarPreview} alt="Profile" className="object-cover" />
+                    <AvatarFallback className="bg-muted text-2xl uppercase">
+                      {profile?.name?.[0] || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                    <Camera className="size-8 text-white" />
+                  </div>
+                  {(uploading || submitting) && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/60">
+                      <div className="size-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    </div>
+                  )}
                 </div>
-              </button>
-            </FileUploadTrigger>
-          </FileUpload>
+              </FileUploadTrigger>
+            </FileUpload>
+            {!uploadedPhotoUrl && !uploading && selectedFiles.length === 0 && !profile?.user_photo && (
+              <p className="text-xs text-destructive font-medium animate-pulse">
+                Custom profile photo is required *
+              </p>
+            )}
+            {(uploadedPhotoUrl || profile?.user_photo) && (
+              <p className="text-xs text-green-600 font-medium flex items-center gap-1">
+                <span>✓</span> Photo ready
+              </p>
+            )}
+          </div>
 
-          <div className="w-full space-y-4">
+          <div className="w-full space-y-4 text-left">
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5 ml-1">
                 Full Name
               </label>
               <input
                 type="text"
                 disabled
                 value={profile?.name || ""}
-                className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-muted/50 text-foreground disabled:opacity-75 disabled:cursor-not-allowed"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5 ml-1">
                 Email
               </label>
               <input
                 type="email"
                 disabled
                 value={profile?.email || ""}
-                className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-muted/50 text-foreground disabled:opacity-75 disabled:cursor-not-allowed"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5 ml-1">
                 Username
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s/g, ""))}
                   placeholder="Choose a username"
-                  className={`w-full px-4 py-3 rounded-lg border outline-none transition ${
+                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${
                     available === true
-                      ? "border-green-600 bg-green-50 dark:bg-green-950"
+                      ? "border-green-500 bg-green-500/5 focus:ring-2 focus:ring-green-500/20"
                       : available === false
-                      ? "border-destructive bg-destructive/10"
-                      : "border-border bg-card"
+                      ? "border-destructive bg-destructive/5 focus:ring-2 focus:ring-destructive/20"
+                      : "border-border bg-card focus:ring-2 focus:ring-primary/20"
                   } text-foreground`}
                 />
                 {checking && (
-                  <span className="absolute right-4 top-3 text-muted-foreground text-sm">
-                    Checking...
-                  </span>
+                  <div className="absolute right-4 top-3.5 flex items-center">
+                    <div className="size-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  </div>
                 )}
                 {!checking && available === true && (
-                  <span className="absolute right-4 top-3 text-green-600 font-semibold">
+                  <span className="absolute right-4 top-3.5 text-green-600 text-sm font-semibold">
                     Available
                   </span>
                 )}
                 {!checking && available === false && (
-                  <span className="absolute right-4 top-3 text-destructive text-sm">
-                    Taken
+                  <span className="absolute right-4 top-3.5 text-destructive text-sm font-medium">
+                    Already taken
                   </span>
                 )}
               </div>
@@ -294,16 +346,27 @@ export default function ProfileForm() {
 
             <button
               onClick={handleSubmit}
-              disabled={!available || !username.trim() || submitting}
-              className="w-full mt-8 bg-primary text-primary-foreground py-3 rounded-lg font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition"
+              disabled={isSubmitDisabled}
+              className="w-full mt-6 bg-primary text-primary-foreground py-4 rounded-xl font-bold text-lg shadow-lg shadow-primary/20 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed hover:brightness-110 transition-all"
             >
-              {submitting ? "Saving..." : "Save Profile"}
+              {submitting ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="size-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  <span>Saving...</span>
+                </div>
+              ) : (
+                "Save Profile"
+              )}
             </button>
+            
+            <p className="text-[10px] text-center text-muted-foreground pt-4">
+              By continuing, you agree to our Terms of Service and Privacy Policy.
+            </p>
           </div>
         </div>
       </div>
-
-      <div className="w-1/2 flex items-center justify-center px-16">
+      
+      <div className="w-1/2 flex items-center justify-center px-16 bg-muted/30">
         <div className="max-w-md">
           <p className="text-5xl text-muted mb-4">"</p>
           <p className="text-lg leading-relaxed text-muted-foreground">

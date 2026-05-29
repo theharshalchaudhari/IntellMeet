@@ -8,7 +8,6 @@ const Hero = () => {
   const fadeRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Hook directly into Lenis's smooth scroll instance instead of native window.scroll
   useLenis(({ scroll }) => {
     if (!fadeRef.current) return;
 
@@ -24,7 +23,7 @@ const Hero = () => {
   });
 
   return (
-    <section className="sticky top-0 h-screen w-full overflow-hidden px-6 flex justify-center mt-[-6rem]">
+    <section className="sticky top-0 h-screen w-full overflow-hidden px-6 flex justify-center">
       <div 
         ref={fadeRef} 
         className="absolute inset-0 will-change-opacity"

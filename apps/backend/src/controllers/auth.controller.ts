@@ -1,10 +1,5 @@
 import { Request, Response } from "express";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabaseAdmin } from "@repo/auth/server";
 
 const getGoogleProfileData = (user: any) => {
   const identityData = user?.identities?.[0]?.identity_data || {};
@@ -29,7 +24,7 @@ const getGoogleProfileData = (user: any) => {
 
 export const googleLogin = async (req: Request, res: Response) => {
   try {
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabaseAdmin.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: "http://localhost:3000/auth/callback",
@@ -49,7 +44,7 @@ export const googleLogin = async (req: Request, res: Response) => {
 
     return res.redirect(data.url);
   } catch (err) {
-    console.error("Google Login Error:", err);
+    
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -65,7 +60,7 @@ export const syncUser = async (req: Request, res: Response) => {
     const {
       data: { user },
       error,
-    } = await supabase.auth.getUser(token);
+    } = await supabaseAdmin.auth.getUser(token);
 
     if (error || !user) {
       return res.status(401).json({ error: "Invalid token" });
@@ -81,16 +76,15 @@ export const syncUser = async (req: Request, res: Response) => {
       profile_status: "pending",
     };
 
-    const { error: upsertError } = await supabase
+    const { error: upsertError } = await supabaseAdmin
       .from("profiles")
       .upsert([upsertData], { onConflict: "id" });
 
     if (upsertError) {
-      console.error("Profile upsert error:", upsertError);
       return res.status(500).json({ error: "Failed to sync user profile" });
     }
 
-    await supabase.from("auth_logs").insert({
+    await supabaseAdmin.from("auth_logs").insert({
       user_id: user.id,
       action: "google_login",
       status: "success",
@@ -98,7 +92,7 @@ export const syncUser = async (req: Request, res: Response) => {
       device: req.headers["user-agent"] || "unknown",
     });
 
-    await supabase.from("sessions").insert({
+    await supabaseAdmin.from("sessions").insert({
       user_id: user.id,
       is_active: true,
       ip_address: req.ip,
@@ -108,7 +102,7 @@ export const syncUser = async (req: Request, res: Response) => {
 
     return res.json({ ok: true });
   } catch (err) {
-    console.error("Sync User Error:", err);
+    
     return res.status(500).json({ error: "Internal server error" });
   }
 };

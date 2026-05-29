@@ -2,6 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "IntellMeet backend service",
   "main": "dist/server.js",
   "scripts": {
@@ -13,6 +14,7 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
+    "@repo/auth": "workspace:*",
     "@supabase/supabase-js": "^2.105.1",
     "axios": "1.15.2",
     "bcrypt": "6.0.0",
@@ -40,6 +42,7 @@
     "@types/jsonwebtoken": "9.0.10",
     "@types/multer": "2.1.0",
     "@types/node": "25.6.0",
-    "tsx": "4.21.0"
+    "tsx": "4.21.0",
+    "vite": "^8.0.0"
   }
 }

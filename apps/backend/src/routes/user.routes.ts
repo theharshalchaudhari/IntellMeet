@@ -1,6 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
-import { createClient } from "@supabase/supabase-js";
-import { auth } from "@/middleware/auth.middleware";
+import { supabaseAdmin, authMiddleware } from "@repo/auth/server";
 
 const router = express.Router();
 
@@ -11,15 +10,10 @@ interface AuthRequest extends Request {
   };
 }
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 const getGoogleProfileData = async (token: string) => {
   const {
     data: { user },
-  } = await supabase.auth.getUser(token);
+  } = await supabaseAdmin.auth.getUser(token);
 
   const identityData = user?.identities?.[0]?.identity_data || {};
 
@@ -31,6 +25,8 @@ const getGoogleProfileData = async (token: string) => {
       identityData.full_name ||
       identityData.name ||
       null,
+    email: user?.email || identityData.email || null,
+    phone: user?.phone || user?.user_metadata?.phone || identityData.phone || null,
     googlePhoto:
       user?.user_metadata?.avatar_url ||
       user?.user_metadata?.picture ||
@@ -42,29 +38,36 @@ const getGoogleProfileData = async (token: string) => {
   }
 }
 
-router.get("/check-username", async (req: Request, res: Response) => {
+router.get("/check-username", authMiddleware as any, async (req: AuthRequest, res: Response) => {
   try {
     const username = req.query.u as string;
+    const userId = req.user?.id;
 
     if (!username || username.length < 3) {
       return res.json({ available: false });
     }
 
-    const { data } = await supabase
+    const { data } = await supabaseAdmin
       .from("profiles")
-      .select("username")
+      .select("id, username")
       .eq("username", username.toLowerCase())
-      .single();
+      .maybeSingle();
 
-    res.json({ available: !data });
-  } catch {
+    if (!data) return res.json({ available: true });
+
+    if (userId && data.id === userId) {
+      return res.json({ available: true });
+    }
+
+    res.json({ available: false });
+  } catch (err) {
     res.json({ available: false });
   }
 });
 
 router.get(
   "/me",
-  (req: AuthRequest, res: Response, next: NextFunction) => auth(req, res, next),
+  authMiddleware,
   async (req: AuthRequest, res: Response) => {
     try {
       const userId = req.user?.id;
@@ -74,9 +77,9 @@ router.get(
         return res.status(401).json({ error: "Unauthorized" });
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from("profiles")
-        .select("email, name, google_photo, username, user_photo, profile_status")
+        .select("email, name, google_photo, username, user_photo, profile_status, phone")
         .eq("id", userId)
         .maybeSingle();
 
@@ -84,21 +87,23 @@ router.get(
         return res.status(500).json({ error: error.message, code: error.code });
       }
 
-      if (data && !data.google_photo && token) {
-        const { user, googlePhoto, name } = await getGoogleProfileData(token);
+      if (data && (!data.google_photo || !data.phone) && token) {
+        const { user, googlePhoto, name, phone } = await getGoogleProfileData(token);
 
-        if (user && googlePhoto) {
-          const { error: backfillError } = await supabase
+        if (user) {
+          const { error: backfillError } = await supabaseAdmin
             .from("profiles")
             .update({
-              google_photo: googlePhoto,
+              google_photo: data.google_photo || googlePhoto,
+              phone: data.phone || phone,
               name: data.name || name,
               updated_at: new Date().toISOString(),
             })
             .eq("id", user.id);
 
           if (!backfillError) {
-            data.google_photo = googlePhoto;
+            data.google_photo = data.google_photo || googlePhoto;
+            data.phone = data.phone || phone;
             data.name = data.name || name;
           }
         }
@@ -111,7 +116,7 @@ router.get(
         },
       });
     } catch (err) {
-      console.error("Get profile error:", err);
+      
       return res.status(500).json({ error: "Failed to fetch profile" });
     }
   }
@@ -119,7 +124,7 @@ router.get(
 
 router.post(
   "/complete-profile",
-  (req: AuthRequest, res: Response, next: NextFunction) => auth(req, res, next),
+  authMiddleware as any,
   async (req: AuthRequest, res: Response) => {
     try {
       const userId = req.user?.id;
@@ -129,22 +134,41 @@ router.post(
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      const { error } = await supabase
+      const { data: existingProfile } = await supabaseAdmin
         .from("profiles")
-        .update({
-          username: username.toLowerCase(),
-          user_photo: typeof photoUrl === "string" && photoUrl.trim() ? photoUrl.trim() : null,
-          profile_status: "active",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", userId);
+        .select("id")
+        .eq("id", userId)
+        .maybeSingle();
 
-      if (error) throw error;
+      const updateData = {
+        username: username.toLowerCase(),
+        user_photo: typeof photoUrl === "string" && photoUrl.trim() ? photoUrl.trim() : null,
+        profile_status: "active",
+        updated_at: new Date().toISOString(),
+      };
+
+      let result;
+      if (existingProfile) {
+        result = await supabaseAdmin
+          .from("profiles")
+          .update(updateData)
+          .eq("id", userId);
+      } else {
+        result = await supabaseAdmin
+          .from("profiles")
+          .insert({
+            id: userId,
+            ...updateData
+          });
+      }
+
+      if (result.error) {
+        throw result.error;
+      }
 
       res.json({ ok: true });
-    } catch (err) {
-      console.error("Complete profile error:", err);
-      res.status(500).json({ error: "Failed to complete profile" });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to complete profile" });
     }
   }
 );
