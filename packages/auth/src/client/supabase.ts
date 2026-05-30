@@ -1,44 +1,94 @@
 import { createClient } from "@supabase/supabase-js";
 
+declare const __INTELLMEET_SUPABASE_URL__: string | undefined;
+declare const __INTELLMEET_SUPABASE_ANON_KEY__: string | undefined;
+
 const isBrowser = typeof window !== 'undefined';
-
-// Use a unified storage key across all applications
 const STORAGE_KEY = 'intellmeet-auth-token';
+const CHUNK_SIZE = 3000;
+const nextSupabaseUrl = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_URL : undefined;
+const nextSupabaseKey = typeof process !== 'undefined'
+  ? (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  : undefined;
 
-// Heuristic to get env vars across Vite and Next.js
-// Bundlers need the full string literal to perform static replacement.
-const supabaseUrl = 
-  (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_URL : undefined) || 
-  // @ts-ignore
-  (typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SUPABASE_URL : undefined);
+let viteSupabaseUrl: string | undefined;
+let viteSupabaseKey: string | undefined;
+const injectedSupabaseUrl =
+  typeof __INTELLMEET_SUPABASE_URL__ !== "undefined"
+    ? __INTELLMEET_SUPABASE_URL__
+    : undefined;
+const injectedSupabaseKey =
+  typeof __INTELLMEET_SUPABASE_ANON_KEY__ !== "undefined"
+    ? __INTELLMEET_SUPABASE_ANON_KEY__
+    : undefined;
+try {
+  const viteEnv = typeof import.meta !== 'undefined' ? (import.meta as any)?.env : undefined;
+  viteSupabaseUrl = viteEnv?.VITE_SUPABASE_URL;
+  viteSupabaseKey = viteEnv?.VITE_SUPABASE_ANON_KEY || viteEnv?.VITE_SUPABASE_PUBLISHABLE_KEY;
+} catch {
+  viteSupabaseUrl = undefined;
+  viteSupabaseKey = undefined;
+}
 
-const supabaseAnonKey = 
-  (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY : undefined) || 
-  // @ts-ignore
-  (typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SUPABASE_ANON_KEY : undefined);
+const supabaseUrl = nextSupabaseUrl || viteSupabaseUrl || injectedSupabaseUrl;
+const supabaseAnonKey = nextSupabaseKey || viteSupabaseKey || injectedSupabaseKey;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   if (typeof window !== 'undefined') {
-    console.error("Supabase environment variables are missing!", {
-      url: !!supabaseUrl,
-      key: !!supabaseAnonKey
-    });
+    const warnedKey = '__INTELLMEET_SUPABASE_ENV_WARNED__';
+    const warned = (window as unknown as Record<string, boolean>)[warnedKey];
+    if (!warned) {
+      console.error("Supabase environment variables are missing!", {
+        url: !!supabaseUrl,
+        key: !!supabaseAnonKey,
+      });
+      (window as unknown as Record<string, boolean>)[warnedKey] = true;
+    }
   }
 }
 
-const CHUNK_SIZE = 3000;
+const parseCookieNumber = (cookie: string | undefined): number => {
+  if (!cookie) return 0;
+  const raw = cookie.split('=')[1];
+  if (!raw) return 0;
+  const num = Number.parseInt(raw, 10);
+  return Number.isFinite(num) && num > 0 ? num : 0;
+};
+
+const encodeValue = (value: string) => encodeURIComponent(value);
+
+const decodeValue = (value: string) => {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
+};
+
+const clearCookieState = (key: string) => {
+  if (!isBrowser) return;
+  const cookies = document.cookie.split(';');
+  document.cookie = `${key}=; path=/; max-age=0; SameSite=Lax`;
+  const chunkCountMatch = cookies.find(row => row.trim().startsWith(`${key}-chunks=`));
+  const count = parseCookieNumber(chunkCountMatch);
+  if (count > 0) {
+    for (let i = 0; i < count; i++) {
+      document.cookie = `${key}.${i}=; path=/; max-age=0; SameSite=Lax`;
+    }
+    document.cookie = `${key}-chunks=; path=/; max-age=0; SameSite=Lax`;
+  }
+  for (let i = 0; i < 10; i++) {
+    document.cookie = `${key}.${i}=; path=/; max-age=0; SameSite=Lax`;
+  }
+};
 
 const cookieStorage = {
   getItem: (key: string) => {
     if (!isBrowser) return null;
     const cookies = document.cookie.split(';').map(c => c.trim());
-
-    // First check if it's a chunked cookie
     const chunkCountMatch = cookies.find(row => row.startsWith(`${key}-chunks=`));
-    if (chunkCountMatch) {
-      const countStr = chunkCountMatch.split('=')[1];
-      const count = countStr ? parseInt(countStr, 10) : 0;
-      if (count === 0) return localStorage.getItem(key);
+    const count = parseCookieNumber(chunkCountMatch);
+    if (count > 0) {
       let combinedValue = '';
       for (let i = 0; i < count; i++) {
         const chunkMatch = cookies.find(row => row.startsWith(`${key}.${i}=`));
@@ -49,68 +99,40 @@ const cookieStorage = {
         }
       }
       if (combinedValue) {
-        try {
-          const decoded = decodeURIComponent(combinedValue);
-          if (key === STORAGE_KEY) {
-            console.log(`[AuthStorage] Found chunked cookie for ${key}. Total length: ${decoded.length}`);
-          }
+        const decoded = decodeValue(combinedValue);
+        if (decoded) {
           return decoded;
-        } catch (e) {
-          console.error('[AuthStorage] Error decoding chunked cookie:', e);
         }
       }
     }
-    
-    // Fallback to non-chunked cookie check
+
     const matches = cookies.filter(row => row.startsWith(`${key}=`));
-    
     if (matches.length > 0) {
       for (const row of matches) {
         const parts = row.split('=');
         parts.shift();
         const value = parts.join('=');
-        
         if (value && value !== 'undefined' && value !== 'null') {
-          try {
-            const decoded = decodeURIComponent(value);
-            if (key === STORAGE_KEY) {
-              console.log(`[AuthStorage] Found standard cookie for ${key}. Length: ${decoded.length}`);
-            }
+          const decoded = decodeValue(value);
+          if (decoded) {
             return decoded;
-          } catch (e) {
-            console.error('[AuthStorage] Error decoding cookie:', e);
           }
         }
       }
     }
 
-    // Fallback to localStorage (critical for cross-port localhost scenarios)
-    const localVal = localStorage.getItem(key);
-    if (localVal && key === STORAGE_KEY) {
-      console.log(`[AuthStorage] Found in localStorage for ${key} (cross-port recovery). Length: ${localVal.length}`);
-    }
-    return localVal;
+    return localStorage.getItem(key);
   },
   setItem: (key: string, value: string) => {
     if (!isBrowser) return;
-    
-    if (key === STORAGE_KEY) {
-      console.log(`[AuthStorage] Setting ${key}. Value length: ${value.length}`);
-    }
 
-    // Always save to localStorage as a fallback for cross-port scenarios on localhost
     localStorage.setItem(key, value);
-    
-    const encoded = encodeURIComponent(value);
-    
-    // Clear any previous state
-    cookieStorage.removeItem(key);
+
+    const encoded = encodeValue(value);
+    clearCookieState(key);
 
     if (encoded.length > CHUNK_SIZE) {
-      // Chunking logic
       const count = Math.ceil(encoded.length / CHUNK_SIZE);
-      console.log(`[AuthStorage] Value is too large (${encoded.length} bytes), splitting into ${count} chunks.`);
-      
       for (let i = 0; i < count; i++) {
         const start = i * CHUNK_SIZE;
         const chunk = encoded.substring(start, start + CHUNK_SIZE);
@@ -118,51 +140,16 @@ const cookieStorage = {
       }
       document.cookie = `${key}-chunks=${count}; path=/; max-age=31104000; SameSite=Lax`;
     } else {
-      // Standard set
       document.cookie = `${key}=${encoded}; path=/; max-age=31104000; SameSite=Lax`;
-    }
-    
-    if (key === STORAGE_KEY) {
-      const getSuccess = cookieStorage.getItem(key);
-      if (!getSuccess) {
-        console.error(`[AuthStorage] FAILED to verify storage for ${key}.`);
-      } else {
-        console.log(`[AuthStorage] Successfully stored ${key}`);
-      }
     }
   },
   removeItem: (key: string) => {
     if (!isBrowser) return;
-    
-    if (key === STORAGE_KEY) {
-      console.log(`[AuthStorage] Removing cookie for ${key}`);
-    }
 
     localStorage.removeItem(key);
-
-    const cookies = document.cookie.split(';');
-    
-    // Remove standard cookie
-    document.cookie = `${key}=; path=/; max-age=0; SameSite=Lax`;
-    
-    // Check for and remove chunks
-    const chunkCountMatch = cookies.find(row => row.trim().startsWith(`${key}-chunks=`));
-    if (chunkCountMatch) {
-      const countStr = chunkCountMatch.split('=')[1];
-      const count = countStr ? parseInt(countStr, 10) : 0;
-      for (let i = 0; i < count; i++) {
-        document.cookie = `${key}.${i}=; path=/; max-age=0; SameSite=Lax`;
-      }
-      document.cookie = `${key}-chunks=; path=/; max-age=0; SameSite=Lax`;
-    }
-
-    // Defensive: also clear any possible stray chunks (in case count was lost)
-    for (let i = 0; i < 10; i++) {
-        document.cookie = `${key}.${i}=; path=/; max-age=0; SameSite=Lax`;
-    }
+    clearCookieState(key);
   },
 };
-
 
 export const supabase = createClient(
   supabaseUrl!,

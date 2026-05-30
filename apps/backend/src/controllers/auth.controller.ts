@@ -24,10 +24,34 @@ const getGoogleProfileData = (user: any) => {
 
 export const googleLogin = async (req: Request, res: Response) => {
   try {
+    const fallbackRedirect = process.env.AUTH_CALLBACK_URL || "http://localhost:3000/auth/callback";
+    const requestedRedirect = typeof req.query.redirectTo === "string" ? req.query.redirectTo : undefined;
+    const redirectTo = requestedRedirect || fallbackRedirect;
+
+    let parsedRedirect: URL;
+    try {
+      parsedRedirect = new URL(redirectTo);
+    } catch {
+      return res.status(400).json({ error: "Invalid redirectTo URL" });
+    }
+
+    if (parsedRedirect.protocol !== "http:" && parsedRedirect.protocol !== "https:") {
+      return res.status(400).json({ error: "Invalid redirectTo protocol" });
+    }
+
+    const allowedHosts = (process.env.ALLOWED_AUTH_REDIRECT_HOSTS || "")
+      .split(",")
+      .map((h) => h.trim())
+      .filter(Boolean);
+
+    if (allowedHosts.length > 0 && !allowedHosts.includes(parsedRedirect.host)) {
+      return res.status(400).json({ error: "redirectTo host is not allowed" });
+    }
+
     const { data, error } = await supabaseAdmin.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: "http://localhost:3000/auth/callback",
+        redirectTo: parsedRedirect.toString(),
         queryParams: {
           prompt: "select_account",
         },
@@ -44,7 +68,6 @@ export const googleLogin = async (req: Request, res: Response) => {
 
     return res.redirect(data.url);
   } catch (err) {
-    
     return res.status(500).json({ error: "Internal server error" });
   }
 };

@@ -6,6 +6,25 @@ import { FileUpload, FileUploadTrigger } from "@/components/ui/file-upload";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabaseClient } from "@/lib/supabaseClient";
 
+const DEFAULT_DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "http://localhost:5173/dashboard";
+const ALLOWED_RETURN_HOSTS = (process.env.NEXT_PUBLIC_ALLOWED_RETURN_TO_HOSTS || "")
+  .split(",")
+  .map((h) => h.trim())
+  .filter(Boolean);
+
+const resolveSafeReturnUrl = (candidate: string | null) => {
+  if (!candidate) return DEFAULT_DASHBOARD_URL;
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return DEFAULT_DASHBOARD_URL;
+    if (ALLOWED_RETURN_HOSTS.length === 0) return candidate;
+    if (ALLOWED_RETURN_HOSTS.includes(parsed.host)) return candidate;
+    return DEFAULT_DASHBOARD_URL;
+  } catch {
+    return DEFAULT_DASHBOARD_URL;
+  }
+};
+
 interface UserProfile {
   email: string;
   name: string;
@@ -216,7 +235,9 @@ export default function ProfileForm() {
         throw new Error("Failed to complete profile");
       }
 
-      window.location.href = "/dashboard";
+      const params = new URLSearchParams(window.location.search);
+      const returnTo = resolveSafeReturnUrl(params.get("return_to"));
+      window.location.href = returnTo;
     } catch (error) {
       setSubmitting(false);
     }

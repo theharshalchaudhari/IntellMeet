@@ -4,39 +4,76 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 
+const DEFAULT_DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "http://localhost:5173/dashboard";
+const ALLOWED_RETURN_HOSTS = (process.env.NEXT_PUBLIC_ALLOWED_RETURN_TO_HOSTS || "")
+  .split(",")
+  .map((h) => h.trim())
+  .filter(Boolean);
+const CALLBACK_GUARD_KEY_PREFIX = "auth-callback-guard:";
+const CALLBACK_GUARD_TTL_MS = 10000;
+
+const resolveSafeReturnUrl = (candidate: string | null) => {
+  if (!candidate) return DEFAULT_DASHBOARD_URL;
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return DEFAULT_DASHBOARD_URL;
+    if (ALLOWED_RETURN_HOSTS.length === 0) return candidate;
+    if (ALLOWED_RETURN_HOSTS.includes(parsed.host)) return candidate;
+    return DEFAULT_DASHBOARD_URL;
+  } catch {
+    return DEFAULT_DASHBOARD_URL;
+  }
+};
+
 export default function CallbackPage() {
   const router = useRouter();
 
   useEffect(() => {
     const run = async () => {
-      console.log("CallbackPage: Checking session...");
-      
-      // Wait a moment for Supabase to process URL parameters (code exchange)
-      await new Promise(r => setTimeout(r, 800));
+      const guardKey = `${CALLBACK_GUARD_KEY_PREFIX}${window.location.pathname}${window.location.search}`;
+      const previousRun = Number(sessionStorage.getItem(guardKey) || "0");
+      const now = Date.now();
+      if (previousRun && now - previousRun < CALLBACK_GUARD_TTL_MS) {
+        return;
+      }
+      sessionStorage.setItem(guardKey, String(now));
+
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const hashAccessToken = hash.get("access_token");
+      const hashRefreshToken = hash.get("refresh_token");
+
+      if (hashAccessToken && hashRefreshToken) {
+        const { error: setSessionError } = await supabaseClient.auth.setSession({
+          access_token: hashAccessToken,
+          refresh_token: hashRefreshToken,
+        });
+        if (setSessionError) {
+          console.error("CallbackPage: setSession failed", setSessionError.message);
+        } else {
+          const cleanUrl = `${window.location.pathname}${window.location.search}`;
+          window.history.replaceState(null, "", cleanUrl);
+        }
+      }
+
+      await new Promise(r => setTimeout(r, 300));
+
+      const params = new URLSearchParams(window.location.search);
+      const returnTo = resolveSafeReturnUrl(params.get("return_to"));
 
       const { data: { session }, error } = await supabaseClient.auth.getSession();
-      
-      console.log("CallbackPage: getSession result", { 
-        hasSession: !!session, 
-        error: error?.message,
-        url: window.location.href 
-      });
 
       if (!session) {
-        // One last try: if there's a code in the URL, maybe it just hasn't processed?
-        // But getSession should have waited.
         console.error("Auth failed: No session after timeout");
         return router.replace("/?auth=failed");
       }
 
-      const syncRes = await fetch("/api/auth/sync", {
+      await fetch("/api/auth/sync", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
 
-      // Quick check if user already has a completed profile
       try {
         const userRes = await fetch("/api/user/me", {
           headers: {
@@ -44,17 +81,15 @@ export default function CallbackPage() {
           },
         });
         const userData = await userRes.json();
-        
+
         if (userData?.profile?.profile_status === 'active') {
-          console.log("Profile active, performing hard redirect to dashboard");
-          window.location.href = "http://localhost:5173/dashboard";
+          window.location.href = returnTo;
           return;
         }
-      } catch (e) {
-        console.error("Profile check failed", e);
+      } catch {
       }
 
-      router.replace("/onboarding");
+      router.replace(`/onboarding?return_to=${encodeURIComponent(returnTo)}`);
     };
 
     run();

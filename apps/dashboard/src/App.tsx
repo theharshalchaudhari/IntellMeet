@@ -16,6 +16,8 @@ import { NotificationsPage } from './pages/settings/NotificationsPage';
 import { IntegrationsPage } from './pages/settings/IntegrationsPage';
 import { MemberFormDialog } from './components/MemberFormDialog';
 
+const APP_ORIGIN = (import.meta.env.VITE_APP_ORIGIN as string | undefined) || 'http://localhost:3000';
+
 function App() {
   const { isAuthenticated, loading } = useAuthStore();
   const location = useLocation();
@@ -47,7 +49,7 @@ function App() {
         </p>
         <div className="flex flex-col gap-3">
           <a 
-            href="http://localhost:3000/" 
+            href={APP_ORIGIN}
             className="px-8 py-3 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg hover:bg-primary/90 transition hover:scale-105 active:scale-95 text-sm"
           >
             Return to Login
