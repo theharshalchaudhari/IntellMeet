@@ -1,15 +1,33 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
 
+import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 
-import react from '@astrojs/react';
+const supabaseUrl =
+  process.env.PUBLIC_SUPABASE_URL ||
+  process.env.VITE_SUPABASE_URL ||
+  '';
 
-// https://astro.build/config
+const supabaseAnonKey =
+  process.env.PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  '';
+
+/** @type {any} */
+const tailwindPlugin = tailwindcss();
+
 export default defineConfig({
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindPlugin],
+
+    define: {
+      __INTELLMEET_SUPABASE_URL__: JSON.stringify(supabaseUrl),
+      __INTELLMEET_SUPABASE_ANON_KEY__: JSON.stringify(supabaseAnonKey),
+    },
   },
 
-  integrations: [react()]
+  integrations: [react()],
 });

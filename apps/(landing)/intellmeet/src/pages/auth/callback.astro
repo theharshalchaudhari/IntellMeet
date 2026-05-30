@@ -1,0 +1,169 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout>
+	<div class="fixed inset-0 flex items-center justify-center overflow-hidden bg-background">
+		<div class="absolute left-1/2 top-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500/10 blur-3xl"></div>
+
+		<div class="relative z-10 flex flex-col items-center gap-5 rounded-2xl border border-border/40 bg-background/70 px-10 py-8 shadow-2xl backdrop-blur-xl">
+			<div class="relative flex h-14 w-14 items-center justify-center">
+				<div class="absolute h-14 w-14 rounded-full border border-red-500/20"></div>
+				<div class="absolute h-14 w-14 animate-spin rounded-full border-2 border-transparent border-r-red-400 border-t-red-500"></div>
+				<div class="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500 shadow-[0_0_18px_rgba(239,68,68,0.9)]"></div>
+			</div>
+
+			<div class="space-y-1 text-center">
+				<h1 class="text-lg font-semibold tracking-tight text-foreground">
+					Signing you in...
+				</h1>
+
+				<p class="text-sm text-muted-foreground">
+					Syncing your session securely
+				</p>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		import { getSupabaseClient } from "../../lib/supabaseClient";
+
+		const LANDING_HOME_URL = `${window.location.origin}/`;
+		const DASHBOARD_URL = import.meta.env.PUBLIC_DASHBOARD_URL || "http://localhost:5173/dashboard";
+		const PROFILE_URL = new URL("/settings/my-details", DASHBOARD_URL).toString();
+		const CALLBACK_GUARD_KEY_PREFIX = "auth-callback-guard:";
+		const CALLBACK_GUARD_TTL_MS = 10000;
+		const CALLBACK_NETWORK_TIMEOUT_MS = 5000;
+		const FALLBACK_REDIRECT_DELAY_MS = 1200;
+
+		const fetchWithTimeout = async (input, init = {}) => {
+			const controller = new AbortController();
+			const timeoutId = window.setTimeout(() => controller.abort(), CALLBACK_NETWORK_TIMEOUT_MS);
+
+			try {
+				return await fetch(input, {
+					...init,
+					signal: controller.signal,
+				});
+			} finally {
+				window.clearTimeout(timeoutId);
+			}
+		};
+
+		const redirectToLanding = (target) => {
+			console.log("[Landing Auth Callback] redirect scheduled", { target });
+			window.setTimeout(() => {
+				window.location.replace(target);
+			}, FALLBACK_REDIRECT_DELAY_MS);
+		};
+
+		const run = async () => {
+			console.log("[Landing Auth Callback] start", {
+				url: window.location.href,
+				search: window.location.search,
+				hash: window.location.hash,
+			});
+			const guardKey = `${CALLBACK_GUARD_KEY_PREFIX}${window.location.pathname}${window.location.search}`;
+			const previousRun = Number(sessionStorage.getItem(guardKey) || "0");
+			const now = Date.now();
+
+			if (previousRun && now - previousRun < CALLBACK_GUARD_TTL_MS) {
+				console.warn("[Landing Auth Callback] guard prevented duplicate run", {
+					previousRun,
+					now,
+				});
+				return;
+			}
+
+			sessionStorage.setItem(guardKey, String(now));
+			console.log("[Landing Auth Callback] guard stored", { guardKey, now });
+
+			const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+			const hashAccessToken = hash.get("access_token");
+			const hashRefreshToken = hash.get("refresh_token");
+			const authCode = new URLSearchParams(window.location.search).get("code");
+			const supabaseClient = getSupabaseClient();
+			console.log("[Landing Auth Callback] parsed auth params", {
+				hasCode: !!authCode,
+				hasHashAccessToken: !!hashAccessToken,
+				hasHashRefreshToken: !!hashRefreshToken,
+				hasSupabaseClient: !!supabaseClient,
+			});
+
+			if (!supabaseClient) {
+				console.error("[Landing Auth Callback] missing Supabase client");
+				window.location.href = "/?auth=failed";
+				return;
+			}
+
+			if (authCode) {
+				console.log("[Landing Auth Callback] exchanging OAuth code for session");
+				const { error: exchangeError } = await supabaseClient.auth.exchangeCodeForSession(authCode);
+
+				if (exchangeError) {
+					console.error("Auth callback: code exchange failed", exchangeError.message);
+				} else {
+					console.log("[Landing Auth Callback] code exchange succeeded");
+				}
+
+				const cleanUrl = new URL(window.location.href);
+				cleanUrl.searchParams.delete("code");
+				window.history.replaceState(null, "", `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
+				console.log("[Landing Auth Callback] cleaned callback url", { url: cleanUrl.toString() });
+			}
+
+			if (hashAccessToken && hashRefreshToken) {
+				console.log("[Landing Auth Callback] setting session from hash tokens");
+				const { error: setSessionError } = await supabaseClient.auth.setSession({
+					access_token: hashAccessToken,
+					refresh_token: hashRefreshToken,
+				});
+
+				if (setSessionError) {
+					console.error("Auth callback: setSession failed", setSessionError.message);
+				} else {
+					console.log("[Landing Auth Callback] setSession succeeded");
+					const cleanUrl = `${window.location.pathname}${window.location.search}`;
+					window.history.replaceState(null, "", cleanUrl);
+				}
+			}
+
+			await new Promise((resolve) => setTimeout(resolve, 300));
+			console.log("[Landing Auth Callback] checking session after bootstrap delay");
+
+			const { data: { session } } = await supabaseClient.auth.getSession();
+			console.log("[Landing Auth Callback] getSession result", {
+				hasSession: !!session,
+				userId: session?.user?.id ?? null,
+				userEmail: session?.user?.email ?? null,
+			});
+
+			if (!session) {
+				console.warn("[Landing Auth Callback] no session available after auth callback");
+				redirectToLanding("/?auth=failed");
+				return;
+			}
+
+			try {
+				console.log("[Landing Auth Callback] syncing session to backend");
+				await fetchWithTimeout("/api/auth/sync", {
+					method: "POST",
+					headers: {
+						Authorization: `Bearer ${session.access_token}`,
+					},
+				});
+				console.log("[Landing Auth Callback] backend sync complete");
+			} catch (error) {
+				console.warn("Auth callback: sync failed", error);
+			}
+
+			console.log("[Landing Auth Callback] redirecting to dashboard", { target: DASHBOARD_URL });
+			redirectToLanding(DASHBOARD_URL);
+		};
+
+		run().catch((error) => {
+			console.error("Auth callback failed", error);
+			redirectToLanding(DASHBOARD_URL);
+		});
+	</script>
+</Layout>
