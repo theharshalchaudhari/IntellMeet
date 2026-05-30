@@ -13,8 +13,16 @@ const NAV_LINKS = [
   { label: "Sign up", href: "/signup",  icon: LogIn },
 ];
 
-export default function MobileHeader() {
+export default function MobileHeader({ isAuthenticated = false }: { isAuthenticated?: boolean }) {
   const [open, setOpen] = useState(false);
+
+  const links = [...NAV_LINKS];
+  if (isAuthenticated) {
+    const signupIndex = links.findIndex(l => l.label === "Sign up");
+    if (signupIndex !== -1) {
+      links[signupIndex] = { label: "Dashboard", href: "/dashboard", icon: LogIn };
+    }
+  }
 
   return (
     <>
@@ -36,7 +44,7 @@ export default function MobileHeader() {
         aria-label="Mobile navigation"
         className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-2 py-2 glass border-t border-border"
       >
-        {NAV_LINKS.map(({ label, href, icon: Icon }) => (
+        {links.map(({ label, href, icon: Icon }) => (
           <Link
             key={href}
             href={href}
@@ -63,7 +71,7 @@ export default function MobileHeader() {
             <X className="h-6 w-6" />
           </button>
 
-          {NAV_LINKS.map(({ label, href }) => (
+          {links.map(({ label, href }) => (
             <Link
               key={href}
               href={href}

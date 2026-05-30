@@ -1,10 +1,23 @@
 "use client";
 
 import React from "react";
+import { supabaseClient } from "@/lib/supabaseClient";
 
 const GoogleAuthButton = () => {
-  const handleLogin = () => {
-    window.location.href = "/api/auth/google";
+  const handleLogin = async () => {
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          prompt: "select_account",
+        },
+      },
+    });
+
+    if (error) {
+      console.error("Login error:", error.message);
+    }
   };
 
   return (

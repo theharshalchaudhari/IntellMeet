@@ -369,9 +369,9 @@ export default function ProfileForm() {
       <div className="w-1/2 flex items-center justify-center px-16 bg-muted/30">
         <div className="max-w-md">
           <p className="text-5xl text-muted mb-4">"</p>
-          <p className="text-lg leading-relaxed text-muted-foreground">
+          <p className="text-2xl leading-1px text-muted-foreground">
             Intellmeet showed up when we were close to giving up. We were stuck,
-            exhausted, and nothing was moving. It didn't just fix our stack — it
+            exhausted, and nothing was moving. It didn't just fix our issues but also
             gave us a second chance. Everything started working, and so did we.
           </p>
           <div className="flex items-center mt-6 gap-3">

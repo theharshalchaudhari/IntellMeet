@@ -9,20 +9,50 @@ export default function CallbackPage() {
 
   useEffect(() => {
     const run = async () => {
-      const {
-        data: { session },
-      } = await supabaseClient.auth.getSession();
+      console.log("CallbackPage: Checking session...");
+      
+      // Wait a moment for Supabase to process URL parameters (code exchange)
+      await new Promise(r => setTimeout(r, 800));
+
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      
+      console.log("CallbackPage: getSession result", { 
+        hasSession: !!session, 
+        error: error?.message,
+        url: window.location.href 
+      });
 
       if (!session) {
+        // One last try: if there's a code in the URL, maybe it just hasn't processed?
+        // But getSession should have waited.
+        console.error("Auth failed: No session after timeout");
         return router.replace("/?auth=failed");
       }
 
-      await fetch("/api/auth/sync", {
+      const syncRes = await fetch("/api/auth/sync", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
+
+      // Quick check if user already has a completed profile
+      try {
+        const userRes = await fetch("/api/user/me", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+        const userData = await userRes.json();
+        
+        if (userData?.profile?.profile_status === 'active') {
+          console.log("Profile active, performing hard redirect to dashboard");
+          window.location.href = "http://localhost:5173/dashboard";
+          return;
+        }
+      } catch (e) {
+        console.error("Profile check failed", e);
+      }
 
       router.replace("/onboarding");
     };

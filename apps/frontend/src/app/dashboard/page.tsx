@@ -1,31 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
-export default function DashboardPage() {
-  const [needsOnboarding, setNeedsOnboarding] = useState(true);
+export default function DashboardBridge() {
+  useEffect(() => {
+    // Force a hard redirect to ensure cookies are sent to the correct port
+    window.location.replace("http://localhost:5173/dashboard");
+  }, []);
 
   return (
-    <div>
-      <h1>Dashboard</h1>
-
-      {needsOnboarding && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.7)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 50,
-          }}
-        >
-          <div style={{ background: "#111", padding: "20px" }}>
-            Complete Profile to Continue
-          </div>
-        </div>
-      )}
+    <div className="h-screen w-screen flex items-center justify-center bg-background text-foreground">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+        <p className="text-lg font-medium">Redirecting to Dashboard...</p>
+      </div>
     </div>
   );
 }

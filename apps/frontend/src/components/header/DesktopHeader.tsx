@@ -15,7 +15,7 @@ import GoogleAuthButton from "@/components/common/GoogleAuthButton";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function DesktopHeader() {
+export default function DesktopHeader({ isAuthenticated = false }: { isAuthenticated?: boolean }) {
   const navRef = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState(true);
   const lastScroll = useRef(0);
@@ -129,7 +129,16 @@ export default function DesktopHeader() {
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 bg-primary -z-10 rounded-xl blur-[18px] opacity-70"
             />
-            <GoogleAuthButton />
+            {isAuthenticated ? (
+               <Link
+                href="/dashboard"
+                className="relative block bg-primary text-primary-foreground px-8 py-3 rounded-xl text-base font-semibold transition hover:opacity-90 active:scale-95"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <GoogleAuthButton />
+            )}
           </div>
 
           <div className="relative">
