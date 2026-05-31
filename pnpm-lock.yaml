@@ -216,6 +216,9 @@ importers:
       prettier-plugin-astro:
         specifier: 'catalog:'
         version: 0.14.1
+      semver:
+        specifier: 7.3.8
+        version: 7.3.8
       turbo:
         specifier: 'catalog:'
         version: 2.9.16
@@ -223,7 +226,101 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
-  apps/(dashboard)/intellmeet:
+  apps/backend:
+    dependencies:
+      '@supabase/supabase-js':
+        specifier: 'catalog:'
+        version: 2.106.2
+      '@wraith/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      axios:
+        specifier: 'catalog:'
+        version: 1.16.1
+      bcrypt:
+        specifier: 'catalog:'
+        version: 6.0.0
+      cloudinary:
+        specifier: 'catalog:'
+        version: 2.10.0
+      compression:
+        specifier: 'catalog:'
+        version: 1.8.1
+      cookie-parser:
+        specifier: 'catalog:'
+        version: 1.4.7
+      cors:
+        specifier: 'catalog:'
+        version: 2.8.6
+      dotenv:
+        specifier: 'catalog:'
+        version: 17.4.2
+      express:
+        specifier: 'catalog:'
+        version: 5.2.1
+      express-rate-limit:
+        specifier: 'catalog:'
+        version: 8.5.2(express@5.2.1)
+      helmet:
+        specifier: 'catalog:'
+        version: 8.2.0
+      ioredis:
+        specifier: 'catalog:'
+        version: 5.11.0
+      jsonwebtoken:
+        specifier: 'catalog:'
+        version: 9.0.3
+      mongoose:
+        specifier: 'catalog:'
+        version: 9.6.3
+      morgan:
+        specifier: 'catalog:'
+        version: 1.10.1
+      multer:
+        specifier: 'catalog:'
+        version: 2.1.1
+      socket.io:
+        specifier: 'catalog:'
+        version: 4.8.3
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
+    devDependencies:
+      '@types/bcrypt':
+        specifier: 'catalog:'
+        version: 6.0.0
+      '@types/cookie-parser':
+        specifier: 'catalog:'
+        version: 1.4.10(@types/express@5.0.6)
+      '@types/cors':
+        specifier: 'catalog:'
+        version: 2.8.19
+      '@types/express':
+        specifier: 'catalog:'
+        version: 5.0.6
+      '@types/jsonwebtoken':
+        specifier: 'catalog:'
+        version: 9.0.10
+      '@types/multer':
+        specifier: 'catalog:'
+        version: 2.1.0
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.9.1
+      eslint:
+        specifier: 'catalog:'
+        version: 10.4.1(jiti@2.7.0)
+      tsx:
+        specifier: 'catalog:'
+        version: 4.22.3
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 7.1.5(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.3)
+
+  apps/dashboard/intellmeet:
     dependencies:
       '@astrojs/react':
         specifier: ^5.0.6
@@ -320,7 +417,7 @@ importers:
         specifier: 'catalog:'
         version: 7.1.5(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.3)
 
-  apps/(landing)/intellmeet:
+  apps/landing/intellmeet:
     dependencies:
       '@astrojs/node':
         specifier: 'catalog:'
@@ -355,100 +452,6 @@ importers:
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.0
-
-  apps/backend:
-    dependencies:
-      '@supabase/supabase-js':
-        specifier: 'catalog:'
-        version: 2.106.2
-      '@wraith/auth':
-        specifier: workspace:*
-        version: link:../../packages/auth
-      axios:
-        specifier: 'catalog:'
-        version: 1.16.1
-      bcrypt:
-        specifier: 'catalog:'
-        version: 6.0.0
-      cloudinary:
-        specifier: 'catalog:'
-        version: 2.10.0
-      compression:
-        specifier: 'catalog:'
-        version: 1.8.1
-      cookie-parser:
-        specifier: 'catalog:'
-        version: 1.4.7
-      cors:
-        specifier: 'catalog:'
-        version: 2.8.6
-      dotenv:
-        specifier: 'catalog:'
-        version: 17.4.2
-      express:
-        specifier: 'catalog:'
-        version: 5.2.1
-      express-rate-limit:
-        specifier: 'catalog:'
-        version: 8.5.2(express@5.2.1)
-      helmet:
-        specifier: 'catalog:'
-        version: 8.2.0
-      ioredis:
-        specifier: 'catalog:'
-        version: 5.11.0
-      jsonwebtoken:
-        specifier: 'catalog:'
-        version: 9.0.3
-      mongoose:
-        specifier: 'catalog:'
-        version: 9.6.3
-      morgan:
-        specifier: 'catalog:'
-        version: 1.10.1
-      multer:
-        specifier: 'catalog:'
-        version: 2.1.1
-      socket.io:
-        specifier: 'catalog:'
-        version: 4.8.3
-      zod:
-        specifier: 'catalog:'
-        version: 4.4.3
-    devDependencies:
-      '@types/bcrypt':
-        specifier: 'catalog:'
-        version: 6.0.0
-      '@types/cookie-parser':
-        specifier: 'catalog:'
-        version: 1.4.10(@types/express@5.0.6)
-      '@types/cors':
-        specifier: 'catalog:'
-        version: 2.8.19
-      '@types/express':
-        specifier: 'catalog:'
-        version: 5.0.6
-      '@types/jsonwebtoken':
-        specifier: 'catalog:'
-        version: 9.0.10
-      '@types/multer':
-        specifier: 'catalog:'
-        version: 2.1.0
-      '@types/node':
-        specifier: 'catalog:'
-        version: 25.9.1
-      eslint:
-        specifier: 'catalog:'
-        version: 10.4.1(jiti@2.7.0)
-      tsx:
-        specifier: 'catalog:'
-        version: 4.22.3
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
-      vite:
-        specifier: 'catalog:'
-        version: 7.1.5(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.3)
 
   packages/auth:
     dependencies:
@@ -4155,6 +4158,10 @@ packages:
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
 
+  lru-cache@6.0.0:
+    resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
+    engines: {node: '>=10'}
+
   lucide-react@1.17.0:
     resolution: {integrity: sha512-9FA9evdox/JQL5PT57fdA1x/yg8T7knJ98+zjTL3UfKza6pflQUUh3XtaQIHKvnsJw1lmsEyHVlt5jchYxOQ5w==}
     peerDependencies:
@@ -4626,10 +4633,6 @@ packages:
     resolution: {integrity: sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postcss@8.5.14:
-    resolution: {integrity: sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg==}
-    engines: {node: ^10 || ^12 || >=14}
-
   postcss@8.5.15:
     resolution: {integrity: sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A==}
     engines: {node: ^10 || ^12 || >=14}
@@ -4946,6 +4949,11 @@ packages:
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
+    hasBin: true
+
+  semver@7.3.8:
+    resolution: {integrity: sha512-NB1ctGL5rlHrPJtFDVIVzTyQylMLu9N9VICA6HSFJo8MCGVTMW6gfpicwKmmK/dAjTOrqu5l63JJOpDSrAis3A==}
+    engines: {node: '>=10'}
     hasBin: true
 
   semver@7.8.0:
@@ -5551,6 +5559,9 @@ packages:
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
+
+  yallist@4.0.0:
+    resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}
 
   yargs-parser@22.0.0:
     resolution: {integrity: sha512-rwu/ClNdSMpkSrUb+d6BRsSkLUq1fmfsY6TOpYzTwvwkg1/NRG85KBy3kq++A8LKQwX6lsu+aWad+2khvuXrqw==}
@@ -7337,11 +7348,11 @@ snapshots:
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.15.3
+      '@types/node': 25.9.1
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.15.3
+      '@types/node': 25.9.1
 
   '@types/cookie-parser@1.4.10(@types/express@5.0.6)':
     dependencies:
@@ -7387,7 +7398,7 @@ snapshots:
 
   '@types/express-serve-static-core@5.1.1':
     dependencies:
-      '@types/node': 22.15.3
+      '@types/node': 25.9.1
       '@types/qs': 6.15.1
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
@@ -7447,12 +7458,12 @@ snapshots:
 
   '@types/send@1.2.1':
     dependencies:
-      '@types/node': 22.15.3
+      '@types/node': 25.9.1
 
   '@types/serve-static@2.2.0':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 22.15.3
+      '@types/node': 25.9.1
 
   '@types/unist@3.0.3': {}
 
@@ -7466,7 +7477,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 22.15.3
+      '@types/node': 25.9.1
 
   '@typescript-eslint/eslint-plugin@8.59.3(@typescript-eslint/parser@8.59.3(eslint@10.4.1(jiti@2.7.0))(typescript@6.0.3))(eslint@10.4.1(jiti@2.7.0))(typescript@6.0.3)':
     dependencies:
@@ -7526,8 +7537,8 @@ snapshots:
 
   '@typescript-eslint/project-service@8.59.3(typescript@6.0.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.59.3(typescript@6.0.3)
-      '@typescript-eslint/types': 8.59.3
+      '@typescript-eslint/tsconfig-utils': 8.60.0(typescript@6.0.3)
+      '@typescript-eslint/types': 8.60.0
       debug: 4.4.3
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -8277,7 +8288,7 @@ snapshots:
   engine.io@6.6.8:
     dependencies:
       '@types/cors': 2.8.19
-      '@types/node': 22.15.3
+      '@types/node': 25.9.1
       '@types/ws': 8.18.1
       accepts: 1.3.8
       base64id: 2.0.0
@@ -9314,6 +9325,10 @@ snapshots:
     dependencies:
       yallist: 3.1.1
 
+  lru-cache@6.0.0:
+    dependencies:
+      yallist: 4.0.0
+
   lucide-react@1.17.0(react@19.2.6):
     dependencies:
       react: 19.2.6
@@ -9949,12 +9964,6 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postcss@8.5.14:
-    dependencies:
-      nanoid: 3.3.12
-      picocolors: 1.1.1
-      source-map-js: 1.2.1
-
   postcss@8.5.15:
     dependencies:
       nanoid: 3.3.12
@@ -10403,6 +10412,10 @@ snapshots:
   scheduler@0.27.0: {}
 
   semver@6.3.1: {}
+
+  semver@7.3.8:
+    dependencies:
+      lru-cache: 6.0.0
 
   semver@7.8.0: {}
 
@@ -10979,7 +10992,7 @@ snapshots:
       esbuild: 0.27.7
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.14
+      postcss: 8.5.15
       rollup: 4.60.4
       tinyglobby: 0.2.16
     optionalDependencies:
@@ -11060,6 +11073,8 @@ snapshots:
   xxhash-wasm@1.1.0: {}
 
   yallist@3.1.1: {}
+
+  yallist@4.0.0: {}
 
   yargs-parser@22.0.0: {}
 

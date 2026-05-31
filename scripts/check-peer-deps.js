@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 const fs = require('fs');
 const path = require('path');
 const semver = require('semver');
@@ -14,46 +13,68 @@ if(!fs.existsSync(nm)){
   process.exit(2);
 }
 
-const astroPkg = readJSON(path.join(nm,'astro','package.json'));
-if(!astroPkg){
-  console.error('astro not found in node_modules.');
+function findAstro(dir){
+  const stack = [dir];
+  while(stack.length){
+    const cur = stack.pop();
+    let entries;
+    try{ entries = fs.readdirSync(cur); }catch(e){ continue }
+    for(const e of entries){
+      const p = path.join(cur,e);
+      const pkg = path.join(p,'package.json');
+      try{ const stat = fs.statSync(p); if(stat.isDirectory()){
+        if(fs.existsSync(pkg)){
+          const pj = readJSON(pkg);
+          if(pj && pj.name === 'astro') return {path: pkg, version: pj.version};
+        }
+        stack.push(p);
+      }}catch(e){}
+    }
+  }
+  return null;
+}
+
+const astroFound = findAstro(nm);
+if(!astroFound){
+  console.error('astro not found under node_modules. Run `pnpm install` first.');
   process.exit(2);
 }
-const astroVersion = astroPkg.version;
+const astroVersion = astroFound.version;
+console.log('Detected astro at', astroFound.path);
 console.log('Installed astro:', astroVersion);
 
 let mismatches = [];
 
-function walk(dir){
-  const entries = fs.readdirSync(dir);
-  for(const e of entries){
-    const p = path.join(dir,e);
-    let stat;
-    try{ stat = fs.statSync(p); }catch(e){continue}
-    if(stat.isDirectory()){
+function walkAndCheck(dir){
+  const stack = [dir];
+  while(stack.length){
+    const cur = stack.pop();
+    let entries;
+    try{ entries = fs.readdirSync(cur); }catch(e){ continue }
+    for(const e of entries){
+      const p = path.join(cur,e);
       const pkg = path.join(p,'package.json');
-      if(fs.existsSync(pkg)){
-        const pj = readJSON(pkg);
-        if(pj && pj.peerDependencies && pj.peerDependencies.astro){
-          const range = pj.peerDependencies.astro;
-          if(!semver.satisfies(astroVersion, range, { includePrerelease: true })){
-            mismatches.push({name: pj.name || e, version: pj.version, range});
+      try{ const stat = fs.statSync(p); if(stat.isDirectory()){
+        if(fs.existsSync(pkg)){
+          const pj = readJSON(pkg);
+          if(pj && pj.peerDependencies && pj.peerDependencies.astro){
+            const range = pj.peerDependencies.astro;
+            if(!semver.satisfies(astroVersion, range, { includePrerelease: true })){
+              mismatches.push({name: pj.name || e, version: pj.version, range, pkg});
+            }
           }
         }
-      }
-      // avoid recursing into .pnpm store to keep runtime reasonable
-      if(!p.includes(path.join('node_modules','.pnpm'))){
-        walk(p);
-      }
+        stack.push(p);
+      }}catch(e){}
     }
   }
 }
 
-walk(nm);
+walkAndCheck(nm);
 
 if(mismatches.length){
   console.error('Peer dependency mismatches for astro detected:');
-  mismatches.forEach(m => console.error(` - ${m.name}@${m.version} expects astro ${m.range}`));
+  mismatches.forEach(m => console.error(` - ${m.name}@${m.version} expects astro ${m.range} (package: ${m.pkg})`));
   process.exit(1);
 }
 
