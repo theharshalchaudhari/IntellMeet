@@ -3,10 +3,6 @@ packages:
   - "packages/**"
   - "services/**"
 
-allowBuilds:
-  bcrypt: set this to true or false
-  esbuild: set this to true or false
-
 catalog:
   "react": 19.2.6
   "react-dom": 19.2.6
@@ -61,6 +57,7 @@ catalog:
 
   "prettier": 3.8.3
   "prettier-plugin-astro": 0.14.1
+  "semver": 7.3.8
   "turbo": 2.9.16
   "tsx": 4.22.3
 
