@@ -1,0 +1,10 @@
+:6969 {
+
+    handle /dashboard* {
+        reverse_proxy localhost:5173
+    }
+
+    handle {
+        reverse_proxy localhost:4321
+    }
+}
