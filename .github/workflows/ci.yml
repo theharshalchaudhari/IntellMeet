@@ -1,5 +1,7 @@
 name: CI
 
+permissions: read-all
+
 on:
   push:
     branches:
@@ -14,6 +16,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
     steps:

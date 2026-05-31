@@ -36,7 +36,7 @@ import Layout from "../../layouts/Layout.astro";
 		const CALLBACK_NETWORK_TIMEOUT_MS = 5000;
 		const FALLBACK_REDIRECT_DELAY_MS = 1200;
 
-		const fetchWithTimeout = async (input, init = {}) => {
+		const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}) => {
 			const controller = new AbortController();
 			const timeoutId = window.setTimeout(() => controller.abort(), CALLBACK_NETWORK_TIMEOUT_MS);
 
@@ -50,7 +50,7 @@ import Layout from "../../layouts/Layout.astro";
 			}
 		};
 
-		const redirectToLanding = (target) => {
+		const redirectToLanding = (target: string) => {
 			console.log("[Landing Auth Callback] redirect scheduled", { target });
 			window.setTimeout(() => {
 				window.location.replace(target);
