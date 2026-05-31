@@ -27,7 +27,7 @@ catalog:
   "@tailwindcss/postcss": 4.3.0
   "@tailwindcss/vite": 4.3.0
 
-  "vite":  7.1.5
+  "vite":  7.3.2
   "@vitejs/plugin-react": 5.1.0
 
   "class-variance-authority": 0.7.1
