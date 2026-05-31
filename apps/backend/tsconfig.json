@@ -8,7 +8,10 @@
     "outDir": "./dist",
 
     "baseUrl": "./src",
+    "ignoreDeprecations": "6.0",
+
     "jsx": "react-jsx",
+
     "paths": {
       "@/*": ["*"],
       "@/controllers/*": ["controllers/*"],
@@ -25,6 +28,8 @@
 
     "types": ["node", "vite/client"]
   },
+
   "include": ["src"],
+
   "exclude": ["node_modules", "dist"]
 }

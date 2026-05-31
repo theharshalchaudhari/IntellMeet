@@ -17,6 +17,7 @@
 
   "dependencies": {
     "@astrojs/react": "catalog:",
+    "@astrojs/node": "catalog:",
 
     "@repo/theme": "workspace:*",
 
