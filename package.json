@@ -13,9 +13,6 @@
     "check-peer-deps": "node scripts/check-peer-deps.js",
     "format": "prettier --write ."
   },
-  "pnpm": {
-    "onlyBuiltDependencies": ["bcrypt", "esbuild", "sharp", "unrs-resolver", "msw"]
-  },
   "dependencies": {
     "react": "catalog:",
     "react-dom": "catalog:"
