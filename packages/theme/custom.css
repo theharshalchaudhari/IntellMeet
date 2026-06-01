@@ -70,3 +70,17 @@
     100% { transform: translate(0, 0); }
   }
 }
+
+
+@layer base {
+
+  ::selection {
+    background: color-mix(in oklab, var(--secondary) 75%, transparent);
+    color: var(--secondary-foreground);
+  }
+
+  ::-moz-selection {
+    background: color-mix(in oklab, var(--primary) 65%, transparent);
+    color: var(--primary-foreground);
+  }
+}
