@@ -1,508 +1,172 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
-import { ArrowUpRight } from 'lucide-react';
-
-import { meetingsApi } from '../api/meetingsApi';
+import { CircleCheckBig, Clock3, Radio, Sparkles } from 'lucide-react';
 
 import { PageTransition } from '../components/PageTransition';
 import { MeetingCard } from '../components/MeetingCard';
-
+import { useMeetings, useRecordedMeetings, useLiveMeetings } from '../hooks/useMeetings';
+import { useWorkspaceSelection } from '../hooks/useWorkspaceSelection';
 import { useAuthStore } from '../store/authStore';
 
-const ctaForStatus = (status: string) => {
-	if (status === 'live') return 'Join';
-
-	if (
-		status === 'recorded' ||
-		status === 'ended'
-	) {
-		return 'Summary';
-	}
-
-	return 'Register';
-};
-
-const RingStat = ({
-	title,
-	value,
+const StatCard = ({
+  label,
+  value,
+  hint,
+  icon: Icon,
 }: {
-	title: string;
-	value: number;
-}) => {
-	const radius = 80;
+  label: string;
+  value: string;
+  hint: string;
+  icon: typeof Sparkles;
+}) => (
+  <div className="border border-border bg-card p-5 shadow-sm">
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+        <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{hint}</p>
+      </div>
 
-	const stroke = 15;
-
-	const normalizedRadius =
-		radius - stroke / 2;
-
-	const circumference =
-		normalizedRadius * 2 * Math.PI;
-
-	const strokeDashoffset =
-		circumference -
-		(value / 100) * circumference;
-
-	return (
-		<div
-			className="
-				flex
-				min-h-[260px]
-				flex-col
-				items-center
-				justify-center
-				border-r
-				border-border
-				bg-background
-				px-8
-				py-10
-				last:border-r-0
-			"
-		>
-			<h3
-				className="
-					mb-8
-					text-lg
-					font-semibold
-					tracking-tight
-					text-foreground
-				"
-			>
-				{title}
-			</h3>
-
-			<div className="relative h-44 w-44">
-				<svg
-					height="176"
-					width="176"
-					viewBox="0 0 176 176"
-					className="-rotate-90"
-				>
-					<circle
-						cx="88"
-						cy="88"
-						r={normalizedRadius}
-						fill="transparent"
-						stroke="currentColor"
-						strokeWidth={stroke}
-						className="
-							text-neutral-200
-							dark:text-neutral-800
-						"
-					/>
-
-					<circle
-						cx="88"
-						cy="88"
-						r={normalizedRadius}
-						fill="transparent"
-						stroke="currentColor"
-						strokeWidth={stroke}
-						strokeLinecap="round"
-						strokeDasharray={`${circumference} ${circumference}`}
-						strokeDashoffset={
-							strokeDashoffset
-						}
-						className="
-							text-black
-							dark:text-white
-							transition-all
-							duration-700
-						"
-					/>
-				</svg>
-
-				<div
-					className="
-						absolute
-						inset-0
-						flex
-						flex-col
-						items-center
-						justify-center
-					"
-				>
-					<div
-						className="
-							text-6xl
-							font-semibold
-							leading-none
-							tracking-tight
-							text-foreground
-						"
-					>
-						{value}
-					</div>
-
-					<div
-						className="
-							mt-2
-							text-lg
-							font-medium
-							text-muted-foreground
-						"
-					>
-						/100
-					</div>
-				</div>
-			</div>
-		</div>
-	);
-};
+      <div className="flex h-11 w-11 items-center justify-center border border-border bg-background text-muted-foreground">
+        <Icon size={18} />
+      </div>
+    </div>
+  </div>
+);
 
 export const DashboardPage = () => {
-	const { user } = useAuthStore();
+  const { user } = useAuthStore();
+  const { activeOrganization, channels, selectedOrganizationId } = useWorkspaceSelection();
 
-	const { data: meetings = [] } = useQuery({
-		queryKey: ['meetings'],
-		queryFn: meetingsApi.fetchMeetings,
-		staleTime: 30_000,
-	});
+  const { data: meetings = [] } = useMeetings(selectedOrganizationId);
+  const { data: recordedMeetings = [] } = useRecordedMeetings(selectedOrganizationId);
+  const { data: liveMeetings = [] } = useLiveMeetings(selectedOrganizationId);
 
-	const liveMeetings = meetings.filter(
-		(meeting) => meeting.status === 'live'
-	);
+  const upcomingMeetings = useMemo(
+    () =>
+      meetings.filter(
+        (meeting) => meeting.status === 'upcoming' || meeting.status === 'scheduled',
+      ),
+    [meetings],
+  );
 
-	const upcomingMeetings = meetings
-		.filter(
-			(meeting) =>
-				meeting.status === 'scheduled'
-		)
-		.slice(0, 4);
+  return (
+    <PageTransition>
+      <div className="flex h-full min-h-0 flex-col gap-6 overflow-hidden">
+        <header className="space-y-3">
+          <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+            {activeOrganization?.name || 'Workspace'}
+          </p>
 
-	const pastMeetings = meetings
-		.filter(
-			(meeting) =>
-				meeting.status === 'recorded' ||
-				meeting.status === 'ended'
-		)
-		.slice(0, 4);
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">
+                My Activity
+              </h1>
 
-	const engagementScore = Math.min(
-		100,
-		52 +
-			liveMeetings.length * 6 +
-			upcomingMeetings.length * 3
-	);
+              <p className="mt-3 max-w-2xl text-sm text-muted-foreground md:text-base">
+                Welcome back{user?.name ? `, ${user.name}` : ''}. {channels.length} channels, {upcomingMeetings.length} upcoming meetings, and {recordedMeetings.length} recordings are ready in this workspace.
+              </p>
+            </div>
 
-	const qualityScore = Math.min(
-		100,
-		58 +
-			pastMeetings.length * 5 +
-			meetings.length * 2
-	);
+            <Link
+              to="/meetings"
+              className="inline-flex items-center gap-2 border border-border bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              <Sparkles size={14} />
+              Open Meetings
+            </Link>
+          </div>
+        </header>
 
-	const fairnessScore = Math.min(
-		100,
-		55 +
-			new Set(
-				meetings.map(
-					(meeting) =>
-						meeting.creator_user_id
-				)
-			).size *
-				4
-	);
+        <section className="grid gap-4 md:grid-cols-3">
+          <StatCard
+            label="Upcoming"
+            value={String(upcomingMeetings.length)}
+            hint="Scheduled sessions waiting in this workspace"
+            icon={Clock3}
+          />
 
-	return (
-		<PageTransition>
-			<div
-				className="
-					mx-auto
-					w-full
-					max-w-7xl
-					p-6
-				"
-			>
-				<div className="mb-8">
-					<h1
-						className="
-							text-5xl
-							font-semibold
-							tracking-tight
-							text-foreground
-						"
-					>
-						My Activity
-					</h1>
+          <StatCard
+            label="Live"
+            value={String(liveMeetings.length)}
+            hint="Rooms currently active right now"
+            icon={Radio}
+          />
 
-					<p
-						className="
-							mt-3
-							text-base
-							text-muted-foreground
-						"
-					>
-						Welcome back,{' '}
-						{user?.name || 'User'}.
-					</p>
-				</div>
+          <StatCard
+            label="Recorded"
+            value={String(recordedMeetings.length)}
+            hint="Saved recordings ready to watch"
+            icon={CircleCheckBig}
+          />
+        </section>
 
-				<div
-					className="
-						grid
-						overflow-hidden
-						border
-						border-border
-						bg-background
-						md:grid-cols-3
-					"
-				>
-					<RingStat
-						title="Engagement"
-						value={engagementScore}
-					/>
+        <section className="grid min-h-0 flex-1 gap-5 overflow-hidden xl:grid-cols-2">
+          <div className="flex min-h-0 flex-col gap-4 overflow-hidden">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold">Upcoming Meetings</h2>
+                <p className="text-sm text-muted-foreground">
+                  Sessions scheduled in the selected workspace.
+                </p>
+              </div>
+            </div>
 
-					<RingStat
-						title="Quality"
-						value={qualityScore}
-					/>
+            <div className="grid min-h-0 gap-4 overflow-hidden lg:grid-cols-2">
+              {upcomingMeetings.map((meeting) => (
+                <MeetingCard
+                  key={meeting.id}
+                  meeting={meeting}
+                  variant="upcoming"
+                  primaryActionLabel="Open"
+                  primaryActionHref={`/meetings/${meeting.id}`}
+                  creatorLabel={meeting.creator_label}
+                />
+              ))}
 
-					<RingStat
-						title="Fairness"
-						value={fairnessScore}
-					/>
-				</div>
+              {upcomingMeetings.length === 0 && (
+                <div className="border border-dashed border-border bg-card p-5 text-sm text-muted-foreground lg:col-span-2">
+                  No upcoming meetings for this workspace.
+                </div>
+              )}
+            </div>
+          </div>
 
-				<div
-					className="
-						mt-10
-						space-y-8
-					"
-				>
-					<section
-						className="
-							glass-card
-							border
-							border-border/40
-							p-6
-						"
-					>
-						<div
-							className="
-								mb-6
-								flex
-								items-center
-								justify-between
-								gap-4
-							"
-						>
-							<div>
-								<h2
-									className="
-										text-2xl
-										font-semibold
-										text-foreground
-									"
-								>
-									Upcoming Meetings
-								</h2>
+          <div className="flex min-h-0 flex-col gap-4 overflow-hidden">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold">Recorded Meetings</h2>
+                <p className="text-sm text-muted-foreground">
+                  YouTube recordings with watch and summary actions.
+                </p>
+              </div>
+            </div>
 
-								<p
-									className="
-										mt-1
-										text-sm
-										text-muted-foreground
-									"
-								>
-									Scheduled sessions ready
-									for your team.
-								</p>
-							</div>
+            <div className="grid min-h-0 gap-4 overflow-hidden lg:grid-cols-2">
+              {recordedMeetings.map((meeting) => (
+                <MeetingCard
+                  key={meeting.id}
+                  meeting={meeting}
+                  variant="recorded"
+                  primaryActionLabel="Watch"
+                  primaryActionHref={meeting.youtube_url}
+                  secondaryActionLabel="Summary"
+                  secondaryActionHref={`/meetings/${meeting.id}/summary`}
+                  creatorLabel={meeting.creator_label}
+                />
+              ))}
 
-							<Link
-								to="/meetings"
-								className="
-									inline-flex
-									items-center
-									gap-2
-									border
-									border-border/50
-									bg-background/40
-									px-4
-									py-2
-									text-sm
-									font-medium
-									text-foreground
-									backdrop-blur-xl
-									transition-colors
-									hover:bg-accent/30
-								"
-							>
-								Manage
-
-								<ArrowUpRight
-									size={16}
-								/>
-							</Link>
-						</div>
-
-						<div
-							className="
-								grid
-								grid-cols-1
-								gap-5
-								lg:grid-cols-2
-							"
-						>
-							{upcomingMeetings.map(
-								(meeting) => (
-									<MeetingCard
-										key={
-											meeting.id
-										}
-										meeting={
-											meeting
-										}
-										actionLabel={ctaForStatus(
-											meeting.status
-										)}
-										actionTo={
-											meeting.meeting_url
-										}
-									/>
-								)
-							)}
-
-							{upcomingMeetings.length ===
-								0 && (
-								<div
-									className="
-										border
-										border-dashed
-										border-border/50
-										bg-background/40
-										p-6
-										text-sm
-										text-muted-foreground
-										lg:col-span-2
-									"
-								>
-									No upcoming meetings
-									yet.
-								</div>
-							)}
-						</div>
-					</section>
-
-					<section
-						className="
-							glass-card
-							border
-							border-border/40
-							p-6
-						"
-					>
-						<div
-							className="
-								mb-6
-								flex
-								items-center
-								justify-between
-								gap-4
-							"
-						>
-							<div>
-								<h2
-									className="
-										text-2xl
-										font-semibold
-										text-foreground
-									"
-								>
-									Recorded Meetings
-								</h2>
-
-								<p
-									className="
-										mt-1
-										text-sm
-										text-muted-foreground
-									"
-								>
-									Recorded rooms and
-									completed sessions.
-								</p>
-							</div>
-
-							<Link
-								to="/analytics"
-								className="
-									inline-flex
-									items-center
-									gap-2
-									border
-									border-border/50
-									bg-background/40
-									px-4
-									py-2
-									text-sm
-									font-medium
-									text-foreground
-									backdrop-blur-xl
-									transition-colors
-									hover:bg-accent/30
-								"
-							>
-								Analytics
-
-								<ArrowUpRight
-									size={16}
-								/>
-							</Link>
-						</div>
-
-						<div
-							className="
-								grid
-								grid-cols-1
-								gap-5
-								lg:grid-cols-2
-							"
-						>
-							{pastMeetings.map(
-								(meeting) => (
-									<MeetingCard
-										key={
-											meeting.id
-										}
-										meeting={
-											meeting
-										}
-										actionLabel={ctaForStatus(
-											meeting.status
-										)}
-										actionTo={`${meeting.meeting_url}/summary`}
-										tone="recorded"
-									/>
-								)
-							)}
-
-							{pastMeetings.length ===
-								0 && (
-								<div
-									className="
-										border
-										border-dashed
-										border-border/50
-										bg-background/40
-										p-6
-										text-sm
-										text-muted-foreground
-										lg:col-span-2
-									"
-								>
-									Recorded meetings will
-									appear here after a
-									session is ended and
-									saved.
-								</div>
-							)}
-						</div>
-					</section>
-				</div>
-			</div>
-		</PageTransition>
-	);
+              {recordedMeetings.length === 0 && (
+                <div className="border border-dashed border-border bg-card p-5 text-sm text-muted-foreground lg:col-span-2">
+                  No recordings have been saved yet.
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
+    </PageTransition>
+  );
 };

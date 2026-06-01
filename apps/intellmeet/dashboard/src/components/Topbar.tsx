@@ -1,497 +1,273 @@
 import {
   Bell,
   Menu,
-  Plus,
+  Moon,
   Search,
-  Upload,
-  Video,
+  Sun,
 } from 'lucide-react';
 
-import { useState } from 'react';
-
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@wraith/ui/shadcn/dialog';
+  useEffect,
+  useState,
+} from 'react';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@wraith/ui/shadcn/select';
+import { Button } from '@wraith/ui/shadcn/button';
+import { Input } from '@wraith/ui/shadcn/input';
 
 import { Logo } from './Logo';
+import { OrganizationSelector } from './OrganizationSelector';
+import { CreateMeetingDialog } from './CreateMeetingDialog';
+import { CreateInstantMeetingButton } from './CreateInstantMeetingButton';
 
-import { useOrganizations } from '../hooks/useOrganizations';
-import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
+import { useOrganizations } from '../hooks/useOrganizations';
+import { useWorkspaceStore } from '../store/useWorkspaceStore';
 
 interface TopbarProps {
   collapsed: boolean;
-  setCollapsed: (value: boolean) => void;
+
+  setCollapsed: (
+    value: boolean,
+  ) => void;
 }
 
 export const Topbar = ({
   collapsed,
   setCollapsed,
 }: TopbarProps) => {
-  const { user } = useAuthStore();
+  const { user } =
+    useAuthStore();
+
+  const [theme, setTheme] =
+    useState<
+      'light' | 'dark'
+    >('light');
 
   const {
     data: organizations = [],
+    isLoading,
   } = useOrganizations();
 
-  const [selectedOrganization, setSelectedOrganization] =
-    useState<string>('');
+  const selectedOrganizationId =
+    useWorkspaceStore(
+      (state) =>
+        state.selectedOrganizationId,
+    );
 
-  const [open, setOpen] = useState(false);
+  const activeOrganization =
+    organizations.find(
+      (organization) =>
+        organization.id ===
+        selectedOrganizationId,
+    ) ??
+    organizations[0] ??
+    null;
 
-  const [meetingType, setMeetingType] = useState<
-    'new' | 'recording'
-  >('new');
+  const canCreateOrgMeetings =
+    !!activeOrganization &&
+    (
+      activeOrganization.role ===
+        'owner' ||
+      activeOrganization.role ===
+        'admin' ||
+      activeOrganization.owner_id ===
+        user?.id
+    );
 
-  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const storedTheme =
+      localStorage.getItem(
+        'theme',
+      );
 
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    youtube_url: '',
-    organization_id: '',
-    scheduled_for: '',
-  });
+    const systemTheme =
+      window.matchMedia(
+        '(prefers-color-scheme: dark)',
+      ).matches
+        ? 'dark'
+        : 'light';
 
-  const handleCreate = async () => {
-    if (!form.organization_id || !form.title) {
-      return;
-    }
+    const resolvedTheme =
+      storedTheme ===
+        'dark' ||
+      storedTheme ===
+        'light'
+        ? storedTheme
+        : systemTheme;
 
-    try {
-      setLoading(true);
+    setTheme(
+      resolvedTheme,
+    );
 
-      if (meetingType === 'recording') {
-        await supabase
-          .from('recorded_meetings')
-          .insert({
-            organization_id: form.organization_id,
-            title: form.title,
-            description: form.description,
-            youtube_url: form.youtube_url,
-            created_by: user?.id,
-          });
-      } else {
-        await supabase
-          .from('meetings')
-          .insert({
-            organization_id: form.organization_id,
-            title: form.title,
-            description: form.description,
-            created_by: user?.id,
-            scheduled_for: form.scheduled_for,
-            status: 'upcoming',
-          });
-      }
+    document.documentElement.classList.toggle(
+      'dark',
+      resolvedTheme ===
+        'dark',
+    );
+  }, []);
 
-      setOpen(false);
+  const toggleTheme = () => {
+    const nextTheme =
+      theme === 'dark'
+        ? 'light'
+        : 'dark';
 
-      setForm({
-        title: '',
-        description: '',
-        youtube_url: '',
-        organization_id: '',
-        scheduled_for: '',
-      });
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
+    setTheme(nextTheme);
+
+    localStorage.setItem(
+      'theme',
+      nextTheme,
+    );
+
+    document.documentElement.classList.toggle(
+      'dark',
+      nextTheme ===
+        'dark',
+    );
   };
 
   return (
-    <>
-      <header
+    <header
+      className="
+        fixed inset-x-0 top-0 z-50
+        h-20 shrink-0
+        border-b border-border
+        bg-background/95
+        backdrop-blur
+      "
+    >
+      <div
         className="
-          fixed inset-x-0 top-0 z-50
-          h-20
-          border-b border-border
-          bg-background
+          flex h-full items-center
+          gap-4 px-6
         "
       >
-        <div className="flex h-full items-center px-6">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() =>
-                setCollapsed(!collapsed)
-              }
-              className="
-                flex h-11 w-11 items-center
-                justify-center
-                border border-border
-                bg-card
-                text-muted-foreground
-                transition-colors
-                hover:text-foreground
-              "
-            >
-              <Menu size={18} />
-            </button>
+        <div
+          className="
+            flex shrink-0 items-center
+            gap-4
+          "
+        >
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() =>
+              setCollapsed(
+                !collapsed,
+              )
+            }
+            className="
+              h-11 w-11 shrink-0
+            "
+          >
+            <Menu className="size-4" />
+          </Button>
 
-            <Logo
-              src="/Logo.svg"
-              alt="IntellMeet"
-              size={145}
-              className="h-auto w-auto"
+          <Logo
+            src="/Logo.svg"
+            alt="IntellMeet"
+            size={145}
+            className="
+              h-auto w-auto shrink-0
+            "
+          />
+        </div>
+
+        <div
+          className="
+            flex min-w-0 flex-1
+            justify-center
+            px-2 lg:px-6
+          "
+        >
+          <div
+            className="
+              relative w-full
+              max-w-4xl
+            "
+          >
+            <Search
+              className="
+                pointer-events-none
+                absolute left-4 top-1/2
+                size-4
+                -translate-y-1/2
+                text-muted-foreground
+              "
+            />
+
+            <Input
+              type="search"
+              placeholder="Search meetings, classrooms, members..."
+              className="
+                h-11 pl-11 pr-4
+                shadow-sm
+              "
             />
           </div>
-
-          <div className="flex flex-1 justify-center px-8">
-            <div className="relative w-full max-w-3xl">
-              <Search
-                size={18}
-                className="
-                  absolute left-4 top-1/2
-                  -translate-y-1/2
-                  text-muted-foreground
-                "
-              />
-
-              <input
-                type="text"
-                placeholder="Search meetings, classrooms, members..."
-                className="
-                  h-12 w-full
-                  border border-border
-                  bg-card
-                  pl-11 pr-4
-                  text-sm
-                  outline-none
-                  placeholder:text-muted-foreground
-                "
-              />
-            </div>
-          </div>
-
-          <div className="ml-auto flex items-center gap-3">
-            <Dialog
-              open={open}
-              onOpenChange={setOpen}
-            >
-              <DialogTrigger asChild>
-                <button
-                  className="
-                    flex h-11 items-center gap-2
-                    border border-border
-                    bg-card
-                    px-4 text-sm
-                    transition-colors
-                    hover:bg-accent
-                  "
-                >
-                  <Plus size={16} />
-                  Create Meet
-                </button>
-              </DialogTrigger>
-
-              <DialogContent
-                className="
-                  border border-border
-                  bg-background
-                "
-              >
-                <DialogHeader>
-                  <DialogTitle>
-                    Create Meeting
-                  </DialogTitle>
-                </DialogHeader>
-
-                <div className="space-y-5 pt-2">
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      onClick={() =>
-                        setMeetingType('new')
-                      }
-                      className={`
-                        flex items-center justify-center gap-2
-                        border border-border
-                        px-4 py-3 text-sm
-                        ${
-                          meetingType === 'new'
-                            ? 'bg-accent text-foreground'
-                            : 'bg-background text-muted-foreground'
-                        }
-                      `}
-                    >
-                      <Video size={16} />
-                      New Meeting
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        setMeetingType(
-                          'recording'
-                        )
-                      }
-                      className={`
-                        flex items-center justify-center gap-2
-                        border border-border
-                        px-4 py-3 text-sm
-                        ${
-                          meetingType ===
-                          'recording'
-                            ? 'bg-accent text-foreground'
-                            : 'bg-background text-muted-foreground'
-                        }
-                      `}
-                    >
-                      <Upload size={16} />
-                      Old Recording
-                    </button>
-                  </div>
-
-                  <Select
-                    value={
-                      form.organization_id
-                    }
-                    onValueChange={(value) =>
-                      setForm({
-                        ...form,
-                        organization_id:
-                          value,
-                      })
-                    }
-                  >
-                    <SelectTrigger
-                      className="
-                        h-12 w-full
-                        border-border
-                        bg-card
-                        shadow-none
-                      "
-                    >
-                      <SelectValue placeholder="Select Organization" />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      {organizations.map(
-                        (
-                          organization: any
-                        ) => (
-                          <SelectItem
-                            key={
-                              organization.id
-                            }
-                            value={
-                              organization.id
-                            }
-                          >
-                            <div className="flex items-center gap-2">
-                              {organization.logo_url && (
-                                <img
-                                  src={
-                                    organization.logo_url
-                                  }
-                                  alt={
-                                    organization.name
-                                  }
-                                  className="h-4 w-4 object-cover"
-                                />
-                              )}
-
-                              <span>
-                                {
-                                  organization.name
-                                }
-                              </span>
-                            </div>
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
-
-                  <input
-                    type="text"
-                    placeholder="Meeting title"
-                    value={form.title}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        title:
-                          e.target.value,
-                      })
-                    }
-                    className="
-                      h-12 w-full
-                      border border-border
-                      bg-card
-                      px-4 text-sm
-                      outline-none
-                    "
-                  />
-
-                  <textarea
-                    placeholder="Description"
-                    value={form.description}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        description:
-                          e.target.value,
-                      })
-                    }
-                    className="
-                      min-h-[120px] w-full
-                      border border-border
-                      bg-card
-                      p-4 text-sm
-                      outline-none
-                    "
-                  />
-
-                  {meetingType ===
-                  'recording' ? (
-                    <input
-                      type="text"
-                      placeholder="YouTube URL"
-                      value={
-                        form.youtube_url
-                      }
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          youtube_url:
-                            e.target.value,
-                        })
-                      }
-                      className="
-                        h-12 w-full
-                        border border-border
-                        bg-card
-                        px-4 text-sm
-                        outline-none
-                      "
-                    />
-                  ) : (
-                    <input
-                      type="datetime-local"
-                      value={
-                        form.scheduled_for
-                      }
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          scheduled_for:
-                            e.target.value,
-                        })
-                      }
-                      className="
-                        h-12 w-full
-                        border border-border
-                        bg-card
-                        px-4 text-sm
-                        outline-none
-                      "
-                    />
-                  )}
-
-                  <button
-                    onClick={handleCreate}
-                    disabled={loading}
-                    className="
-                      flex h-12 w-full
-                      items-center justify-center
-                      border border-border
-                      bg-primary
-                      text-primary-foreground
-                    "
-                  >
-                    {loading
-                      ? 'Creating...'
-                      : meetingType ===
-                        'recording'
-                      ? 'Upload Recording'
-                      : 'Create Meeting'}
-                  </button>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            <Select
-              value={selectedOrganization}
-              onValueChange={
-                setSelectedOrganization
-              }
-            >
-              <SelectTrigger
-                className="
-                  h-11 min-w-[220px]
-                  border-border
-                  bg-card
-                  shadow-none
-                "
-              >
-                <SelectValue placeholder="Select Workspace" />
-              </SelectTrigger>
-
-              <SelectContent>
-                {organizations.map(
-                  (organization: any) => (
-                    <SelectItem
-                      key={organization.id}
-                      value={organization.id}
-                    >
-                      <div className="flex items-center gap-2">
-                        {organization.logo_url && (
-                          <img
-                            src={
-                              organization.logo_url
-                            }
-                            alt={
-                              organization.name
-                            }
-                            className="h-4 w-4 object-cover"
-                          />
-                        )}
-
-                        <span>
-                          {organization.name}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  )
-                )}
-              </SelectContent>
-            </Select>
-
-            <button
-              className="
-                relative flex h-11 w-11
-                items-center justify-center
-                border border-border
-                bg-card
-                text-muted-foreground
-                transition-colors
-                hover:text-foreground
-              "
-            >
-              <Bell size={18} />
-
-              <span
-                className="
-                  absolute right-2 top-2
-                  h-2 w-2
-                  bg-primary
-                "
-              />
-            </button>
-          </div>
         </div>
-      </header>
-    </>
+
+        <div
+          className="
+            flex shrink-0 items-center
+            gap-3
+          "
+        >
+          <CreateInstantMeetingButton />
+
+          {canCreateOrgMeetings && (
+            <CreateMeetingDialog />
+          )}
+
+          {!isLoading &&
+            organizations.length >
+              0 && (
+              <div className="min-w-[220px]">
+                <OrganizationSelector />
+              </div>
+            )}
+
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={
+              toggleTheme
+            }
+            className="
+              h-11 w-11 shrink-0
+            "
+          >
+            {theme ===
+            'dark' ? (
+              <Moon className="size-5" />
+            ) : (
+              <Sun className="size-5" />
+            )}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="
+              relative h-11 w-11
+              shrink-0
+            "
+          >
+            <Bell className="size-4" />
+
+            <span
+              className="
+                absolute right-2 top-2
+                size-2 rounded-full
+                bg-primary
+              "
+            />
+          </Button>
+        </div>
+      </div>
+    </header>
   );
 };

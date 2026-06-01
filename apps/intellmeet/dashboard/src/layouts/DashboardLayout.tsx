@@ -1,33 +1,30 @@
 import { Outlet } from 'react-router-dom';
 import { useState } from 'react';
 
-import { Sidebar } from '../components/Sidebar.tsx';
-import { Topbar } from '../components/Topbar.tsx';
-import { LivePanel } from '../components/LivePanel.tsx';
+import { Sidebar } from '../components/Sidebar';
+import { Topbar } from '../components/Topbar';
+import { LivePanel } from '../components/LivePanel';
+import { useWorkspaceSelection } from '../hooks/useWorkspaceSelection';
 
 export const DashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
 
+  useWorkspaceSelection();
+
   return (
-    <div className="dashboard-backdrop flex h-screen w-full overflow-hidden bg-background text-foreground">
-      <Topbar
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
-      />
+    <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
+      <Topbar collapsed={collapsed} setCollapsed={setCollapsed} />
 
       <div className="flex min-h-0 flex-1 overflow-hidden pt-20">
-        <Sidebar
-          collapsed={collapsed}
-          setCollapsed={setCollapsed}
-        />
+        <Sidebar collapsed={collapsed} />
 
         <main className="min-h-0 min-w-0 flex-1 overflow-hidden px-4 py-5 md:px-6 lg:px-8">
           <Outlet />
         </main>
 
-        <div className="hidden w-[380px] shrink-0 border-l border-border/50 xl:block">
+        <aside className="hidden h-full w-96 shrink-0 border-l border-border xl:block">
           <LivePanel />
-        </div>
+        </aside>
       </div>
     </div>
   );
