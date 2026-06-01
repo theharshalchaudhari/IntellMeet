@@ -2,6 +2,7 @@ import {
   MessageSquare,
   Mic,
   MicOff,
+  ScrollText,
   MonitorUp,
   Settings,
   SmilePlus,
@@ -19,6 +20,8 @@ interface MeetingControlsProps {
 
   cameraEnabled?: boolean;
 
+  screenShareEnabled?: boolean;
+
   onToggleMic?: () => void;
 
   onToggleCamera?: () => void;
@@ -26,6 +29,8 @@ interface MeetingControlsProps {
   onOpenChat?: () => void;
 
   onOpenParticipants?: () => void;
+
+  onOpenTranscript?: () => void;
 
   onOpenReactions?: () => void;
 
@@ -41,6 +46,8 @@ export const MeetingControls = ({
 
   cameraEnabled = true,
 
+  screenShareEnabled = false,
+
   onToggleMic,
 
   onToggleCamera,
@@ -48,6 +55,8 @@ export const MeetingControls = ({
   onOpenChat,
 
   onOpenParticipants,
+
+  onOpenTranscript,
 
   onOpenReactions,
 
@@ -89,6 +98,13 @@ export const MeetingControls = ({
     },
 
     {
+      icon: ScrollText,
+
+      onClick:
+        onOpenTranscript,
+    },
+
+    {
       icon: SmilePlus,
 
       onClick:
@@ -100,6 +116,9 @@ export const MeetingControls = ({
 
       onClick:
         onToggleScreenShare,
+
+      active:
+        screenShareEnabled,
     },
 
     {
@@ -138,7 +157,14 @@ export const MeetingControls = ({
             className="
               h-10 w-10
               shrink-0
+
+              data-[active=true]:bg-primary
+              data-[active=true]:text-primary-foreground
             "
+            data-active={
+              'active' in Control &&
+              Control.active
+            }
           >
             <Control.icon className="size-4" />
           </Button>

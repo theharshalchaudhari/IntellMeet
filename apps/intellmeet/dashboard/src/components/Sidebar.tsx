@@ -22,6 +22,8 @@ interface SidebarProps {
 
   cameraEnabled?: boolean;
 
+  screenShareEnabled?: boolean;
+
   onToggleMic?: () => void;
 
   onToggleCamera?: () => void;
@@ -29,6 +31,8 @@ interface SidebarProps {
   onOpenChat?: () => void;
 
   onOpenParticipants?: () => void;
+
+  onOpenTranscript?: () => void;
 
   onOpenReactions?: () => void;
 
@@ -44,6 +48,8 @@ export const Sidebar = ({
 
   cameraEnabled = true,
 
+  screenShareEnabled = false,
+
   onToggleMic,
 
   onToggleCamera,
@@ -51,6 +57,8 @@ export const Sidebar = ({
   onOpenChat,
 
   onOpenParticipants,
+
+  onOpenTranscript,
 
   onOpenReactions,
 
@@ -289,6 +297,9 @@ export const Sidebar = ({
             cameraEnabled={
               cameraEnabled
             }
+            screenShareEnabled={
+              screenShareEnabled
+            }
             onToggleMic={
               onToggleMic
             }
@@ -300,6 +311,9 @@ export const Sidebar = ({
             }
             onOpenParticipants={
               onOpenParticipants
+            }
+            onOpenTranscript={
+              onOpenTranscript
             }
             onOpenReactions={
               onOpenReactions

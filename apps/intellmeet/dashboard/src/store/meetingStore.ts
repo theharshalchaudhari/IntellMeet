@@ -33,6 +33,8 @@ type MeetingStore = {
 
   participantsOpen: boolean;
 
+  transcriptOpen: boolean;
+
   reactionsOpen: boolean;
 
   setMeetingType: (
@@ -59,6 +61,8 @@ type MeetingStore = {
 
   toggleParticipants: () => void;
 
+  toggleTranscript: () => void;
+
   toggleReactions: () => void;
 };
 
@@ -82,6 +86,8 @@ export const useMeetingStore =
       chatOpen: false,
 
       participantsOpen: false,
+
+      transcriptOpen: false,
 
       reactionsOpen: false,
 
@@ -128,6 +134,8 @@ export const useMeetingStore =
         set((state) => ({
           chatOpen:
             !state.chatOpen,
+          participantsOpen: false,
+          transcriptOpen: false,
         })),
 
       toggleParticipants:
@@ -135,7 +143,17 @@ export const useMeetingStore =
           set((state) => ({
             participantsOpen:
               !state.participantsOpen,
+            chatOpen: false,
+            transcriptOpen: false,
           })),
+
+      toggleTranscript: () =>
+        set((state) => ({
+          transcriptOpen:
+            !state.transcriptOpen,
+          chatOpen: false,
+          participantsOpen: false,
+        })),
 
       toggleReactions: () =>
         set((state) => ({

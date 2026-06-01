@@ -8,8 +8,10 @@ import { ChatPanel } from '../../components/meeting/ChatPanel';
 import { MeetingBottomOverlay } from '../../components/meeting/MeetingBottomOverlay';
 import { ParticipantsPanel } from '../../components/meeting/ParticipantsPanel';
 import { ReactionsLayer } from '../../components/meeting/ReactionsLayer';
+import { TranscriptPanel } from '../../components/meeting/TranscriptPanel';
 
 import { useLiveKitMeeting } from '../../hooks/useLiveKitMeeting';
+import { useLiveTranscription } from '../../hooks/useLiveTranscription';
 import { useMeetingStore } from '../../store/meetingStore';
 
 import { MeetingGrid } from './MeetingGrid';
@@ -23,8 +25,10 @@ export const MeetingPage = () => {
   const {
     chatOpen,
     participantsOpen,
+    transcriptOpen,
     toggleChat,
     toggleParticipants,
+    toggleTranscript,
     toggleReactions,
   } = useMeetingStore();
 
@@ -44,6 +48,11 @@ export const MeetingPage = () => {
     meetingSession.participantRole === 'host' ||
     meetingSession.participantRole === 'admin';
 
+  const transcript = useLiveTranscription({
+    meetingId: meetingSession.meeting?.id,
+    enabled: Boolean(meetingSession.meeting?.id && meetingSession.micEnabled),
+  });
+
   return (
     <MeetingLayout
       sidebar={
@@ -52,11 +61,13 @@ export const MeetingPage = () => {
             collapsed={false}
             micEnabled={meetingSession.micEnabled}
             cameraEnabled={meetingSession.cameraEnabled}
+            screenShareEnabled={meetingSession.screenShareEnabled}
             onToggleMic={meetingSession.toggleMicrophone}
             onToggleCamera={meetingSession.toggleCamera}
             onToggleScreenShare={meetingSession.toggleScreenShare}
             onOpenChat={toggleChat}
             onOpenParticipants={toggleParticipants}
+            onOpenTranscript={toggleTranscript}
             onOpenReactions={toggleReactions}
             onOpenSettings={() => undefined}
           />
@@ -67,6 +78,15 @@ export const MeetingPage = () => {
           <ChatPanel />
         ) : participantsOpen ? (
           <ParticipantsPanel participants={meetingSession.participants} />
+        ) : transcriptOpen ? (
+          <TranscriptPanel
+            entries={transcript.entries}
+            interimText={transcript.interimText}
+            isListening={transcript.isListening}
+            error={transcript.error}
+            transcriptText={transcript.transcriptText}
+            onClear={transcript.clearTranscript}
+          />
         ) : null
       }
     >
@@ -98,15 +118,33 @@ export const MeetingPage = () => {
           </div>
         )}
 
+        {meetingSession.mediaError && !meetingSession.error && (
+          <div
+            className="
+              absolute left-1/2 top-20 z-20
+              max-w-md -translate-x-1/2
+              border border-destructive/30
+              bg-background/95 px-4 py-3
+              text-center text-sm
+              text-destructive shadow-sm
+              backdrop-blur
+            "
+          >
+            {meetingSession.mediaError}
+          </div>
+        )}
+
         {!isOrganizationMeeting && (
           <MeetingBottomOverlay
             micEnabled={meetingSession.micEnabled}
             cameraEnabled={meetingSession.cameraEnabled}
+            screenShareEnabled={meetingSession.screenShareEnabled}
             onToggleMic={meetingSession.toggleMicrophone}
             onToggleCamera={meetingSession.toggleCamera}
             onToggleScreenShare={meetingSession.toggleScreenShare}
             onOpenChat={toggleChat}
             onOpenParticipants={toggleParticipants}
+            onOpenTranscript={toggleTranscript}
             onOpenReactions={toggleReactions}
           />
         )}

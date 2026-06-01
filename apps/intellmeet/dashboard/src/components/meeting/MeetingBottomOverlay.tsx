@@ -3,10 +3,12 @@ import { MeetingControls } from './MeetingControls';
 interface MeetingBottomOverlayProps {
   micEnabled: boolean;
   cameraEnabled: boolean;
+  screenShareEnabled: boolean;
   onToggleMic: () => void;
   onToggleCamera: () => void;
   onOpenChat: () => void;
   onOpenParticipants: () => void;
+  onOpenTranscript: () => void;
   onOpenReactions: () => void;
   onToggleScreenShare: () => void;
 }
@@ -14,10 +16,12 @@ interface MeetingBottomOverlayProps {
 export const MeetingBottomOverlay = ({
   micEnabled,
   cameraEnabled,
+  screenShareEnabled,
   onToggleMic,
   onToggleCamera,
   onOpenChat,
   onOpenParticipants,
+  onOpenTranscript,
   onOpenReactions,
   onToggleScreenShare,
 }: MeetingBottomOverlayProps) => {
@@ -42,6 +46,9 @@ export const MeetingBottomOverlay = ({
           cameraEnabled={
             cameraEnabled
           }
+          screenShareEnabled={
+            screenShareEnabled
+          }
           onToggleMic={
             onToggleMic
           }
@@ -53,6 +60,9 @@ export const MeetingBottomOverlay = ({
           }
           onOpenParticipants={
             onOpenParticipants
+          }
+          onOpenTranscript={
+            onOpenTranscript
           }
           onOpenReactions={
             onOpenReactions

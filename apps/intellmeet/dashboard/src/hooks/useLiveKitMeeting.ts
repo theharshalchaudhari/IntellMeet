@@ -129,6 +129,7 @@ export const useLiveKitMeeting = (identifiers: LiveKitMeetingIdentifiers) => {
   const [activeSpeakerIds, setActiveSpeakerIds] = useState<Set<string>>(new Set());
   const [, setRevision] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [mediaError, setMediaError] = useState<string | null>(null);
   const mountedRef = useRef(true);
   const tokenInput = useMemo(
     () =>
@@ -171,6 +172,7 @@ export const useLiveKitMeeting = (identifiers: LiveKitMeetingIdentifiers) => {
     const connect = async () => {
       try {
         setError(null);
+        setMediaError(null);
 
         const tokenResponse = await intellmeetRealtimeApi.createToken(tokenInput);
 
@@ -218,8 +220,24 @@ export const useLiveKitMeeting = (identifiers: LiveKitMeetingIdentifiers) => {
         }
 
         await intellmeetRealtimeApi.joinParticipant(tokenResponse.meeting.id);
-        await currentRoom.localParticipant.setMicrophoneEnabled(true);
-        await currentRoom.localParticipant.setCameraEnabled(true);
+
+        let localMediaError: string | null = null;
+
+        try {
+          await currentRoom.localParticipant.setMicrophoneEnabled(true);
+        } catch {
+          localMediaError =
+            'Microphone permission was blocked. Use the mic control to try again.';
+        }
+
+        try {
+          await currentRoom.localParticipant.setCameraEnabled(true);
+        } catch {
+          localMediaError =
+            'Camera permission was blocked. Use the camera control to try again.';
+        }
+
+        setMediaError(localMediaError);
 
         if (mountedRef.current) {
           setConnectionState(currentRoom.state);
@@ -261,9 +279,14 @@ export const useLiveKitMeeting = (identifiers: LiveKitMeetingIdentifiers) => {
       return;
     }
 
-    await room.localParticipant.setMicrophoneEnabled(
-      !room.localParticipant.isMicrophoneEnabled,
-    );
+    try {
+      await room.localParticipant.setMicrophoneEnabled(
+        !room.localParticipant.isMicrophoneEnabled,
+      );
+      setMediaError(null);
+    } catch {
+      setMediaError('Microphone permission was blocked by the browser.');
+    }
     bumpRevision();
   }, [bumpRevision, room]);
 
@@ -272,9 +295,14 @@ export const useLiveKitMeeting = (identifiers: LiveKitMeetingIdentifiers) => {
       return;
     }
 
-    await room.localParticipant.setCameraEnabled(
-      !room.localParticipant.isCameraEnabled,
-    );
+    try {
+      await room.localParticipant.setCameraEnabled(
+        !room.localParticipant.isCameraEnabled,
+      );
+      setMediaError(null);
+    } catch {
+      setMediaError('Camera permission was blocked by the browser.');
+    }
     bumpRevision();
   }, [bumpRevision, room]);
 
@@ -283,9 +311,14 @@ export const useLiveKitMeeting = (identifiers: LiveKitMeetingIdentifiers) => {
       return;
     }
 
-    await room.localParticipant.setScreenShareEnabled(
-      !room.localParticipant.isScreenShareEnabled,
-    );
+    try {
+      await room.localParticipant.setScreenShareEnabled(
+        !room.localParticipant.isScreenShareEnabled,
+      );
+      setMediaError(null);
+    } catch {
+      setMediaError('Screen sharing could not start. Check browser permissions and try again.');
+    }
     bumpRevision();
   }, [bumpRevision, room]);
 
@@ -314,6 +347,7 @@ export const useLiveKitMeeting = (identifiers: LiveKitMeetingIdentifiers) => {
     participants,
     connectionState,
     error: missingRoute ? 'Missing meeting route' : error,
+    mediaError,
     micEnabled: localParticipant?.isMicrophoneEnabled ?? false,
     cameraEnabled: localParticipant?.isCameraEnabled ?? false,
     screenShareEnabled: localParticipant?.isScreenShareEnabled ?? false,
