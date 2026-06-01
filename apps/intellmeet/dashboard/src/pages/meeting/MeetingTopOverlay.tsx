@@ -1,6 +1,7 @@
 import {
   Clock3,
   Lock,
+  LogOut,
   PhoneOff,
   Signal,
 } from 'lucide-react';
@@ -37,24 +38,23 @@ export const MeetingTopOverlay = ({
 
   const handleLeaveMeeting =
     async () => {
-      if (isHost) {
-        const shouldEnd =
-          window.confirm(
-            'End meeting for everyone?',
-          );
+      await onLeave?.();
 
-        if (!shouldEnd) {
-          return;
-        }
+      navigate('/dashboard');
+    };
 
-        await onEnd?.();
+  const handleEndMeeting =
+    async () => {
+      const shouldEnd =
+        window.confirm(
+          'End meeting for everyone?',
+        );
 
-        navigate('/dashboard');
-
+      if (!shouldEnd) {
         return;
       }
 
-      await onLeave?.();
+      await onEnd?.();
 
       navigate('/dashboard');
     };
@@ -140,24 +140,32 @@ export const MeetingTopOverlay = ({
         </div>
 
         <Button
-        
           type="button"
-          variant="destructive"
-          onClick={
-            handleLeaveMeeting
+          variant={
+            isHost
+              ? 'outline'
+              : 'destructive'
           }
-          className="
-            h-11 gap-2
-          "
+          onClick={handleLeaveMeeting}
+          className="h-11 gap-2"
         >
-          <PhoneOff className="size-4" />
+          <LogOut className="size-4" />
 
-          <span>
-            {isHost
-              ? 'End Meeting'
-              : 'Leave'}
-          </span>
+          <span>Leave</span>
         </Button>
+
+        {isHost && (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleEndMeeting}
+            className="h-11 gap-2"
+          >
+            <PhoneOff className="size-4" />
+
+            <span>End Meeting</span>
+          </Button>
+        )}
       </div>
     </div>
   );

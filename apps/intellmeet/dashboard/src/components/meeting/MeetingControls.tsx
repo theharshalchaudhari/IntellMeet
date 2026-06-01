@@ -22,6 +22,8 @@ interface MeetingControlsProps {
 
   screenShareEnabled?: boolean;
 
+  transcriptOpen?: boolean;
+
   onToggleMic?: () => void;
 
   onToggleCamera?: () => void;
@@ -48,6 +50,8 @@ export const MeetingControls = ({
 
   screenShareEnabled = false,
 
+  transcriptOpen = false,
+
   onToggleMic,
 
   onToggleCamera,
@@ -66,6 +70,10 @@ export const MeetingControls = ({
 }: MeetingControlsProps) => {
   const controls = [
     {
+      label: micEnabled
+        ? 'Mute microphone'
+        : 'Turn on microphone',
+
       icon: micEnabled
         ? Mic
         : MicOff,
@@ -75,6 +83,10 @@ export const MeetingControls = ({
     },
 
     {
+      label: cameraEnabled
+        ? 'Turn off camera'
+        : 'Turn on camera',
+
       icon: cameraEnabled
         ? Video
         : VideoOff,
@@ -84,6 +96,8 @@ export const MeetingControls = ({
     },
 
     {
+      label: 'Participants',
+
       icon: Users,
 
       onClick:
@@ -91,6 +105,8 @@ export const MeetingControls = ({
     },
 
     {
+      label: 'Chat',
+
       icon: MessageSquare,
 
       onClick:
@@ -98,13 +114,20 @@ export const MeetingControls = ({
     },
 
     {
+      label: 'Live transcript',
+
       icon: ScrollText,
 
       onClick:
         onOpenTranscript,
+
+      active:
+        transcriptOpen,
     },
 
     {
+      label: 'Reactions',
+
       icon: SmilePlus,
 
       onClick:
@@ -112,6 +135,10 @@ export const MeetingControls = ({
     },
 
     {
+      label: screenShareEnabled
+        ? 'Stop screen share'
+        : 'Share screen',
+
       icon: MonitorUp,
 
       onClick:
@@ -122,6 +149,8 @@ export const MeetingControls = ({
     },
 
     {
+      label: 'Settings',
+
       icon: Settings,
 
       onClick:
@@ -153,6 +182,12 @@ export const MeetingControls = ({
             size="icon"
             onClick={
               Control.onClick
+            }
+            aria-label={
+              Control.label
+            }
+            title={
+              Control.label
             }
             className="
               h-10 w-10

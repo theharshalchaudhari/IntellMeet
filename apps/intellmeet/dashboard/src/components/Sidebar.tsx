@@ -24,6 +24,8 @@ interface SidebarProps {
 
   screenShareEnabled?: boolean;
 
+  transcriptOpen?: boolean;
+
   onToggleMic?: () => void;
 
   onToggleCamera?: () => void;
@@ -49,6 +51,8 @@ export const Sidebar = ({
   cameraEnabled = true,
 
   screenShareEnabled = false,
+
+  transcriptOpen = false,
 
   onToggleMic,
 
@@ -299,6 +303,9 @@ export const Sidebar = ({
             }
             screenShareEnabled={
               screenShareEnabled
+            }
+            transcriptOpen={
+              transcriptOpen
             }
             onToggleMic={
               onToggleMic

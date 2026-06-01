@@ -5,6 +5,7 @@ import { useLocation, useParams } from 'react-router-dom';
 import { Sidebar } from '../../components/Sidebar';
 
 import { ChatPanel } from '../../components/meeting/ChatPanel';
+import { LiveTranscriptOverlay } from '../../components/meeting/LiveTranscriptOverlay';
 import { MeetingBottomOverlay } from '../../components/meeting/MeetingBottomOverlay';
 import { ParticipantsPanel } from '../../components/meeting/ParticipantsPanel';
 import { ReactionsLayer } from '../../components/meeting/ReactionsLayer';
@@ -62,6 +63,7 @@ export const MeetingPage = () => {
             micEnabled={meetingSession.micEnabled}
             cameraEnabled={meetingSession.cameraEnabled}
             screenShareEnabled={meetingSession.screenShareEnabled}
+            transcriptOpen={transcriptOpen}
             onToggleMic={meetingSession.toggleMicrophone}
             onToggleCamera={meetingSession.toggleCamera}
             onToggleScreenShare={meetingSession.toggleScreenShare}
@@ -134,20 +136,27 @@ export const MeetingPage = () => {
           </div>
         )}
 
-        {!isOrganizationMeeting && (
-          <MeetingBottomOverlay
-            micEnabled={meetingSession.micEnabled}
-            cameraEnabled={meetingSession.cameraEnabled}
-            screenShareEnabled={meetingSession.screenShareEnabled}
-            onToggleMic={meetingSession.toggleMicrophone}
-            onToggleCamera={meetingSession.toggleCamera}
-            onToggleScreenShare={meetingSession.toggleScreenShare}
-            onOpenChat={toggleChat}
-            onOpenParticipants={toggleParticipants}
-            onOpenTranscript={toggleTranscript}
-            onOpenReactions={toggleReactions}
-          />
-        )}
+        <LiveTranscriptOverlay
+          entries={transcript.entries}
+          interimText={transcript.interimText}
+          isListening={transcript.isListening}
+          error={transcript.error}
+          onOpenTranscript={toggleTranscript}
+        />
+
+        <MeetingBottomOverlay
+          micEnabled={meetingSession.micEnabled}
+          cameraEnabled={meetingSession.cameraEnabled}
+          screenShareEnabled={meetingSession.screenShareEnabled}
+          transcriptOpen={transcriptOpen}
+          onToggleMic={meetingSession.toggleMicrophone}
+          onToggleCamera={meetingSession.toggleCamera}
+          onToggleScreenShare={meetingSession.toggleScreenShare}
+          onOpenChat={toggleChat}
+          onOpenParticipants={toggleParticipants}
+          onOpenTranscript={toggleTranscript}
+          onOpenReactions={toggleReactions}
+        />
 
         <ReactionsLayer />
       </div>

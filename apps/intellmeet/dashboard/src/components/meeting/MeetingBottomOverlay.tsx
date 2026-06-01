@@ -4,6 +4,7 @@ interface MeetingBottomOverlayProps {
   micEnabled: boolean;
   cameraEnabled: boolean;
   screenShareEnabled: boolean;
+  transcriptOpen: boolean;
   onToggleMic: () => void;
   onToggleCamera: () => void;
   onOpenChat: () => void;
@@ -17,6 +18,7 @@ export const MeetingBottomOverlay = ({
   micEnabled,
   cameraEnabled,
   screenShareEnabled,
+  transcriptOpen,
   onToggleMic,
   onToggleCamera,
   onOpenChat,
@@ -48,6 +50,9 @@ export const MeetingBottomOverlay = ({
           }
           screenShareEnabled={
             screenShareEnabled
+          }
+          transcriptOpen={
+            transcriptOpen
           }
           onToggleMic={
             onToggleMic
