@@ -4,13 +4,14 @@ import {
   MicOff,
   Settings,
   SmilePlus,
+  Users,
   Video,
   VideoOff,
 } from 'lucide-react';
 
 import { Button } from '@wraith/ui/shadcn/button';
 
-type MeetingControlsProps = {
+interface MeetingControlsProps {
   collapsed?: boolean;
 
   micEnabled?: boolean;
@@ -23,10 +24,12 @@ type MeetingControlsProps = {
 
   onOpenChat?: () => void;
 
+  onOpenParticipants?: () => void;
+
   onOpenReactions?: () => void;
 
   onOpenSettings?: () => void;
-};
+}
 
 export const MeetingControls = ({
   collapsed = false,
@@ -41,6 +44,8 @@ export const MeetingControls = ({
 
   onOpenChat,
 
+  onOpenParticipants,
+
   onOpenReactions,
 
   onOpenSettings,
@@ -50,30 +55,44 @@ export const MeetingControls = ({
       icon: micEnabled
         ? Mic
         : MicOff,
-      onClick: onToggleMic,
+
+      onClick:
+        onToggleMic,
     },
 
     {
       icon: cameraEnabled
         ? Video
         : VideoOff,
+
       onClick:
         onToggleCamera,
     },
 
     {
+      icon: Users,
+
+      onClick:
+        onOpenParticipants,
+    },
+
+    {
+      icon: MessageSquare,
+
+      onClick:
+        onOpenChat,
+    },
+
+    {
       icon: SmilePlus,
+
       onClick:
         onOpenReactions,
     },
 
     {
-      icon: MessageSquare,
-      onClick: onOpenChat,
-    },
-
-    {
       icon: Settings,
+
       onClick:
         onOpenSettings,
     },

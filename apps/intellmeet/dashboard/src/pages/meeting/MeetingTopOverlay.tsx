@@ -1,24 +1,48 @@
 import {
   Clock3,
   Lock,
+  PhoneOff,
   Signal,
 } from 'lucide-react';
 
-interface MeetingTopOverlayProps {
-  title?: string;
+import { useNavigate } from 'react-router-dom';
 
+import { Button } from '@wraith/ui/shadcn/button';
+
+interface MeetingTopOverlayProps {
   connectionState?: string;
 
   duration?: string;
+
+  isHost?: boolean;
 }
 
 export const MeetingTopOverlay = ({
-  title = 'Meeting',
-
   connectionState = 'Connected',
 
   duration = '00:00:00',
+
+  isHost = false,
 }: MeetingTopOverlayProps) => {
+  const navigate =
+    useNavigate();
+
+  const handleLeaveMeeting =
+    () => {
+      if (isHost) {
+        const shouldEnd =
+          window.confirm(
+            'End meeting for everyone?',
+          );
+
+        if (!shouldEnd) {
+          return;
+        }
+      }
+
+      navigate('/dashboard');
+    };
+
   return (
     <div
       className="
@@ -81,18 +105,6 @@ export const MeetingTopOverlay = ({
       >
         <div
           className="
-            border border-border
-            bg-background/90
-            px-4 py-2
-            text-sm font-medium
-            backdrop-blur
-          "
-        >
-          {title}
-        </div>
-
-        <div
-          className="
             flex items-center gap-2
             border border-border
             bg-background/90
@@ -110,6 +122,26 @@ export const MeetingTopOverlay = ({
             {duration}
           </span>
         </div>
+
+        <Button
+        
+          type="button"
+          variant="destructive"
+          onClick={
+            handleLeaveMeeting
+          }
+          className="
+            h-11 gap-2 bg-red-600 rounded-md
+          "
+        >
+          <PhoneOff className="size-4" />
+
+          <span>
+            {isHost
+              ? 'End Meeting'
+              : 'Leave'}
+          </span>
+        </Button>
       </div>
     </div>
   );

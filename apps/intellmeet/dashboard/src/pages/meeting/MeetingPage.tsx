@@ -34,6 +34,8 @@ export const MeetingPage = () => {
 
     toggleChat,
 
+    toggleParticipants,
+
     toggleReactions,
   } = useMeetingStore();
 
@@ -45,6 +47,8 @@ export const MeetingPage = () => {
         ),
       [location.pathname],
     );
+
+  const isHost = true;
 
   return (
     <MeetingLayout
@@ -66,6 +70,9 @@ export const MeetingPage = () => {
             }
             onOpenChat={
               toggleChat
+            }
+            onOpenParticipants={
+              toggleParticipants
             }
             onOpenReactions={
               toggleReactions
@@ -91,13 +98,9 @@ export const MeetingPage = () => {
         "
       >
         <MeetingTopOverlay
-          title={
-            isOrganizationMeeting
-              ? 'Organization Meeting'
-              : 'Instant Meeting'
-          }
           connectionState="Connected"
           duration="00:00:00"
+          isHost={isHost}
         />
 
         <MeetingGrid />

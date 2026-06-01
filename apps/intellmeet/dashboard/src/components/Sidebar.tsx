@@ -28,6 +28,8 @@ interface SidebarProps {
 
   onOpenChat?: () => void;
 
+  onOpenParticipants?: () => void;
+
   onOpenReactions?: () => void;
 
   onOpenSettings?: () => void;
@@ -45,6 +47,8 @@ export const Sidebar = ({
   onToggleCamera,
 
   onOpenChat,
+
+  onOpenParticipants,
 
   onOpenReactions,
 
@@ -290,6 +294,9 @@ export const Sidebar = ({
             onOpenChat={
               onOpenChat
             }
+            onOpenParticipants={
+              onOpenParticipants
+            }
             onOpenReactions={
               onOpenReactions
             }
@@ -372,4 +379,4 @@ export const Sidebar = ({
       </div>
     </aside>
   );
-};
+}
