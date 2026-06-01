@@ -1,14 +1,8 @@
-import { useState } from 'react';
-
 import { useNavigate } from 'react-router-dom';
 
 import { Video } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 import { Button } from '@wraith/ui/shadcn/button';
-
-import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../store/authStore';
 
 const generateMeetingCode = () => {
   const chars =
@@ -37,77 +31,20 @@ export const CreateInstantMeetingButton =
     const navigate =
       useNavigate();
 
-    const { user } =
-      useAuthStore();
+    const handleStartMeeting =
+      () => {
+        const meetingCode =
+          generateMeetingCode();
 
-    const [loading, setLoading] =
-      useState(false);
-
-    const handleCreateMeeting =
-      async () => {
-        if (!user?.id) {
-          toast.error(
-            'You must be logged in.',
-          );
-
-          return;
-        }
-
-        try {
-          setLoading(true);
-
-          const meetingCode =
-            generateMeetingCode();
-
-          const { error } =
-            await supabase
-              .from('meetings')
-              .insert({
-                meeting_code:
-                  meetingCode,
-
-                meeting_type:
-                  'instant',
-
-                title:
-                  'Instant Meeting',
-
-                status: 'live',
-
-                created_by:
-                  user.id,
-
-                organization_id:
-                  null,
-
-                channel_id: null,
-              });
-
-          if (error) {
-            throw error;
-          }
-
-          navigate(
-            `/${meetingCode}`,
-          );
-        } catch (error) {
-          console.error(error);
-
-          toast.error(
-            'Unable to create meeting.',
-          );
-        } finally {
-          setLoading(false);
-        }
+        navigate(
+          `/${meetingCode}`,
+        );
       };
 
     return (
       <Button
         type="button"
-        onClick={
-          handleCreateMeeting
-        }
-        disabled={loading}
+        onClick={handleStartMeeting}
         className="
           h-11 gap-2
         "
@@ -115,9 +52,7 @@ export const CreateInstantMeetingButton =
         <Video className="size-4" />
 
         <span>
-          {loading
-            ? 'Starting...'
-            : 'Instant Meet'}
+          Instant Meet
         </span>
       </Button>
     );

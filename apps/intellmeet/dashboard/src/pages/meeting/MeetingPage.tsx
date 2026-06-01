@@ -34,8 +34,6 @@ export const MeetingPage = () => {
 
     toggleChat,
 
-    toggleParticipants,
-
     toggleReactions,
   } = useMeetingStore();
 

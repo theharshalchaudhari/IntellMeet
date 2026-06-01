@@ -15,6 +15,7 @@ import { AnalyticsPage } from './pages/AnalyticsPage.tsx';
 import { TeamManagementPage } from './pages/TeamManagementPage.tsx';
 import { MeetingRoomPage } from './pages/MeetingRoomPage.tsx';
 import { MeetingSummaryPage } from './pages/MeetingSummaryPage.tsx';
+import { MeetingPage } from './pages/meeting/MeetingPage';
 
 import { MyDetailsPage } from './pages/settings/MyDetailsPage';
 import { PasswordPage } from './pages/settings/PasswordPage';
@@ -106,6 +107,16 @@ function App() {
           location={location}
           key={location.pathname}
         >
+          <Route
+            path="/:meetingCode"
+            element={<MeetingPage />}
+          />
+
+          <Route
+            path="/org/:orgSlug/:channelSlug/:meetingSlug"
+            element={<MeetingPage />}
+          />
+
           <Route element={<DashboardLayout />}>
             <Route
               path="/"
