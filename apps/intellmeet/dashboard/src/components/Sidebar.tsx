@@ -1,117 +1,284 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Video, KanbanSquare, BarChart3, Settings, ArrowLeftRight } from 'lucide-react';
-import type { Dispatch, SetStateAction } from 'react';
+import {
+  LayoutDashboard,
+  Video,
+  KanbanSquare,
+  BarChart3,
+} from 'lucide-react';
 
 import { useAuthStore } from '../store/authStore';
-import { DarkModeToggle } from './DarkModeToggle';
+import { useOrganizations } from '../hooks/useOrganizations';
+import { useChannels } from '../hooks/useChannels';
 
 interface SidebarProps {
   collapsed: boolean;
-  setCollapsed: Dispatch<SetStateAction<boolean>>;
 }
 
-export const Sidebar = ({ collapsed }: SidebarProps) => {
-  const switchAccount = useAuthStore((state) => state.switchAccount);
-  const user = useAuthStore((state) => state.user);
+export const Sidebar = ({
+  collapsed,
+}: SidebarProps) => {
+  const { user } = useAuthStore();
 
-  const navSections = [
+  const {
+    data: organizations = [],
+  } = useOrganizations();
+
+  const activeOrganization =
+    organizations?.[0];
+
+  const {
+    data: channels = [],
+  } = useChannels(
+    activeOrganization?.id
+  );
+
+  const menuItems = [
     {
-      title: 'Workspace',
-      items: [
-        { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-        { path: '/meetings', icon: Video, label: 'Meetings' },
-        { path: '/kanban', icon: KanbanSquare, label: 'Kanban' },
-      ],
+      path: '/dashboard',
+      icon: LayoutDashboard,
+      label: 'My Activity',
     },
     {
-      title: 'Management',
-      items: [
-        { path: '/analytics', icon: BarChart3, label: 'Analytics' },
-        { path: '/settings', icon: Settings, label: 'Settings' },
-      ],
+      path: '/stats',
+      icon: BarChart3,
+      label: 'My Stats',
+    },
+    {
+      path: '/kanban',
+      icon: KanbanSquare,
+      label: 'Kanban',
+    },
+    {
+      path: '/meetings',
+      icon: Video,
+      label: 'Friends',
     },
   ];
 
   return (
-    <aside className={`relative z-20 flex h-[calc(100vh-5rem)] shrink-0 flex-col justify-between border-r border-border/50 bg-background/65 backdrop-blur-2xl transition-[width] duration-300 ease-in-out ${collapsed ? 'w-20' : 'w-64'}`}>
-      <div className="flex-1 overflow-y-auto premium-scrollbar px-3 py-5">
+    <aside
+      className={`
+        flex shrink-0 flex-col
+        border-r border-border
+        bg-background
+        transition-all duration-300
+        ${
+          collapsed
+            ? 'w-20'
+            : 'w-[280px]'
+        }
+      `}
+    >
+      <div className="flex-1 overflow-y-auto px-4 py-5">
+        <div className="flex flex-col gap-8">
+          <section>
+            {!collapsed && (
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">
+                  Menu
+                </h2>
 
+                <LayoutDashboard
+                  size={16}
+                  className="text-muted-foreground"
+                />
+              </div>
+            )}
 
-        <div className="flex flex-col gap-7">
-          {navSections.map((section) => (
-            <div key={section.title}>
-              {!collapsed && (
-                <p className="mb-3 px-3 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                  {section.title}
-                </p>
-              )}
-
-              <nav className="flex flex-col gap-1">
-                {section.items.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    title={collapsed ? item.label : ''}
-                    className={({ isActive }) =>
-                      [
-                        'group flex items-center rounded-2xl transition-all duration-200',
-                        collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3',
+            <nav className="flex flex-col gap-1">
+              {menuItems.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  title={
+                    collapsed
+                      ? item.label
+                      : ''
+                  }
+                  className={({
+                    isActive,
+                  }) =>
+                    `
+                      flex items-center
+                      border border-border
+                      transition-all duration-200
+                      ${
+                        collapsed
+                          ? 'justify-center px-0 py-4'
+                          : 'gap-3 px-4 py-3'
+                      }
+                      ${
                         isActive
-                          ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'text-muted-foreground hover:bg-accent/60 hover:text-accent-foreground',
-                      ].join(' ')
-                    }
-                  >
-                    <item.icon size={19} strokeWidth={1.9} className="shrink-0" />
-                    {!collapsed && <span className="truncate text-sm font-medium">{item.label}</span>}
-                  </NavLink>
-                ))}
-              </nav>
-            </div>
-          ))}
+                          ? 'bg-accent text-accent-foreground'
+                          : 'text-foreground hover:bg-accent'
+                      }
+                    `
+                  }
+                >
+                  <item.icon
+                    size={18}
+                    strokeWidth={1.8}
+                    className="shrink-0"
+                  />
+
+                  {!collapsed && (
+                    <span className="truncate text-sm font-medium">
+                      {item.label}
+                    </span>
+                  )}
+                </NavLink>
+              ))}
+            </nav>
+          </section>
+
+          {!collapsed && (
+            <section>
+              <h2 className="mb-4 text-lg font-semibold">
+                Organizations
+              </h2>
+
+              <div className="flex flex-col gap-1">
+                {organizations.map(
+                  (organization) => (
+                    <button
+                      key={
+                        organization.id
+                      }
+                      className="
+                        flex items-center gap-3
+                        border border-border
+                        px-4 py-3
+                        text-left
+                        transition-all duration-200
+                        hover:bg-accent
+                      "
+                    >
+                      <div
+                        className="
+                          flex h-10 w-10 items-center
+                          justify-center overflow-hidden
+                          border border-border
+                          bg-muted
+                        "
+                      >
+                        {organization.logo_url ? (
+                          <img
+                            src={
+                              organization.logo_url
+                            }
+                            alt={
+                              organization.name
+                            }
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-sm font-semibold">
+                            {organization.name.charAt(
+                              0
+                            )}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {
+                            organization.name
+                          }
+                        </p>
+
+                        <p className="truncate text-xs text-muted-foreground">
+                          Workspace
+                        </p>
+                      </div>
+                    </button>
+                  )
+                )}
+              </div>
+            </section>
+          )}
+
+          {!collapsed && (
+            <section>
+              <h2 className="mb-4 text-lg font-semibold">
+                Channels
+              </h2>
+
+              <div className="flex flex-col gap-1">
+                {channels.map(
+                  (channel) => (
+                    <NavLink
+                      key={channel.id}
+                      to={`/channels/${channel.id}`}
+                      className="
+                        border border-border
+                        px-4 py-3
+                        text-sm
+                        transition-all duration-200
+                        hover:bg-accent
+                      "
+                    >
+                      {channel.name}
+                    </NavLink>
+                  )
+                )}
+              </div>
+            </section>
+          )}
         </div>
       </div>
 
-      <div className="border-t border-border/50 p-3">
-        <div className={`flex items-center ${collapsed ? 'flex-col gap-3' : 'justify-between gap-3'}`}>
-          <DarkModeToggle />
-
-          <button
-            onClick={switchAccount}
-            title="Switch account"
-            className="flex h-10 w-10 items-center justify-center text-muted-foreground transition-colors duration-200 hover:text-foreground"
+      <div className="border-t border-border p-4">
+        <div className="border border-border bg-card p-3">
+          <div
+            className={`
+              flex items-center
+              ${
+                collapsed
+                  ? 'justify-center'
+                  : 'gap-3'
+              }
+            `}
           >
-            <ArrowLeftRight size={18} strokeWidth={1.8} />
-          </button>
-        </div>
-
-        {user && (
-          <NavLink
-            to="/settings/my-details"
-            className={`mt-4 border border-border/50 bg-card/60 backdrop-blur-xl transition-colors duration-200 hover:border-border/70 hover:bg-background/80 ${collapsed ? 'flex justify-center p-2' : 'flex items-center gap-3 p-3'}`}
-          >
-            <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-border/50">
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
+            <div
+              className="
+                h-12 w-12 overflow-hidden
+                border border-border
+              "
+            >
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.name}
+                  className="h-full w-full object-cover"
+                />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-primary/10 text-xs font-bold uppercase text-primary">
-                  {user.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')
-                    .slice(0, 2)}
+                <div
+                  className="
+                    flex h-full w-full items-center
+                    justify-center
+                    bg-muted
+                    text-sm font-semibold
+                  "
+                >
+                  {user?.name?.[0]}
                 </div>
               )}
             </div>
 
             {!collapsed && (
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{user.name}</p>
-                <p className="truncate text-xs text-muted-foreground">Enterprise Member</p>
+                <p className="truncate text-sm font-semibold">
+                  {user?.name}
+                </p>
+
+                <p className="truncate text-xs text-muted-foreground">
+                  {user?.email}
+                </p>
               </div>
             )}
-          </NavLink>
-        )}
+          </div>
+        </div>
       </div>
     </aside>
   );

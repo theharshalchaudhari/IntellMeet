@@ -343,6 +343,9 @@ importers:
       '@wraith/auth':
         specifier: workspace:*
         version: link:../../../packages/auth
+      '@wraith/ui':
+        specifier: workspace:*
+        version: link:../../../packages/ui
       clsx:
         specifier: 'catalog:'
         version: 2.1.1

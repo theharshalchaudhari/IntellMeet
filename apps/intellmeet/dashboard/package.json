@@ -15,6 +15,7 @@
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@wraith/auth": "workspace:*",
+    "@wraith/ui": "workspace:*",
     "clsx": "catalog:",
     "date-fns": "catalog:",
     "framer-motion": "catalog:",
