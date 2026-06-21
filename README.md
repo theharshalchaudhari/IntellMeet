@@ -1,231 +1,343 @@
-# wraithorg
+# IntellMeet
 
-wraithorg is a unified platform ecosystem focused on authentication infrastructure, intelligent systems, realtime collaboration, developer tooling, and scalable application architecture.
+AI-powered smart meeting workspace built for teams, startups, colleges, and organizations.
 
-The repository powers both the Wraith platform and the underlying infrastructure exposed to developers through reusable services, SDKs, UI systems, and platform APIs.
+IntellMeet combines live meetings, browser-based recording, real-time transcripts, rolling summaries, AI-generated action items, searchable meeting memory, and workspace collaboration into one system.
 
----
+The goal is simple:
 
-## Platform Architecture
-
-The workspace is organized into three primary layers:
-
-```txt id="q5m2vp"
-apps/
-packages/
-services/
-```
-
-### apps
-
-Applications are separated into two categories:
-
-```txt id="r8v1xn"
-apps/
-  dashboard/
-  landing/
-```
-
-#### `apps/landing`
-
-Public-facing landing platforms built with Astro.
-
-These applications focus on:
-
-* SEO
-* performance
-* static rendering
-* marketing systems
-* product onboarding
-
-#### `apps/dashboard`
-
-Authenticated application platforms built with Vite + React.
-
-These applications handle:
-
-* realtime systems
-* authenticated user flows
-* platform management
-* dashboards
-* collaborative environments
+**Turn meetings from forgotten conversations into searchable decision systems.**
 
 ---
 
-## Platform Services
+# Core Idea
 
-wraithorg is designed as a platform-first ecosystem where core infrastructure is exposed through reusable packages and managed backend systems.
+Most meeting tools stop at video calling.
 
-Developers integrate services through SDKs while infrastructure, storage, authentication, and synchronization remain managed by the platform.
+IntellMeet goes further:
 
----
+* Live meetings with WebRTC
+* Host-side browser recording
+* 30-second chunk upload system
+* Continuous transcript generation
+* Rolling AI summaries during the meeting
+* Action item extraction
+* Contextual AI chat for current + past meetings
+* Workspace collaboration and analytics
+* Google Drive integration for storage
 
-## Wraith Auth
+This is not just a meeting app.
 
-`wraith-auth` is a centralized authentication infrastructure designed as a plug-and-use identity platform.
-
-The system is intended to provide:
-
-* hosted authentication flows
-* account management
-* OAuth providers
-* callback handling
-* session management
-* profile synchronization
-* secure backend-managed identity storage
-
-Authentication flows are designed around hosted routes similar to:
-
-```txt id="u4p7zr"
-https://auth.wraithorg.com/...
-```
-
-Applications integrating Wraith Auth will be able to:
-
-* launch authentication flows through SDK functions
-* receive automatic callback handling
-* synchronize authenticated sessions
-* manage users without building backend auth infrastructure
-
-The goal is to expose authentication through minimal integration APIs such as:
-
-```ts id="h2x9wc"
-login()
-signup()
-logout()
-deleteAccount()
-updateProfile()
-```
-
-while backend infrastructure, storage, and session management remain fully managed by Wraith infrastructure.
+This is a meeting intelligence platform.
 
 ---
 
-## Wraith Themes
+# Tech Stack
 
-`wraith-themes` is being designed as a centralized theme synchronization platform.
+## Frontend
 
-Instead of distributing static theme files, themes are intended to be:
-
-* account-linked
-* remotely synchronized
-* dynamically resolved
-* shared across applications
-
-Applications integrating:
-
-* Wraith Auth
-* Wraith Themes
-* Theme Picker components
-
-will be able to synchronize user theme preferences automatically across supported platforms.
-
----
-
-## Wraith UI
-
-`wraith-ui` is a reusable UI platform inspired by composable system architectures.
-
-The goal is to provide:
-
-* production-ready components
-* complete reusable sections
-* platform-aware generators
-* installation tooling
-* design-consistent systems
-
-The platform is intended to support installation flows similar to:
-
-```bash id="d7m3kr"
-pnpm add wraith-ui
-```
-
-with tooling capable of:
-
-* detecting project environments
-* adapting to platform configuration
-* generating compatible components
-* integrating automatically into existing projects
-
-Supported environments may include:
-
-* React
-* Vite
 * Next.js
-* Astro
-* Node-based ecosystems
+* TypeScript
+* React
+* Tailwind CSS
+* ShadCN UI
+* Socket.io Client
+* WebRTC
+* MediaRecorder API
+* Google OAuth
+
+## Backend
+
+* Node.js
+* Express.js
+* TypeScript
+* MongoDB
+* Redis (ioredis)
+* Socket.io
+* Google Drive API
+* NVIDIA NIM APIs
+* OpenRouter APIs
+* Axios
+* Multer
+* Cloudinary
+* JWT
+
+## Infrastructure
+
+* TurboRepo
+* pnpm Workspaces
+* Docker
+* Kubernetes (future scale)
+* GitHub Actions
 
 ---
 
-## Engineering Principles
+# Recording Architecture
 
-The platform is built around:
+## Final Production MVP Decision
 
-* modular infrastructure
-* centralized platform services
-* strongly typed systems
-* reusable architecture
-* secure-by-default design
-* scalable backend systems
-* realtime-first applications
-* reproducible builds
-* developer-focused workflows
+### Host-side Browser Recording + 30s Chunk Upload + Continuous Processing
 
----
+We do **not** use heavy server-side recording infra in phase 1.
 
-## Technology Stack
+We use:
 
-| Layer            | Technologies                |
-| ---------------- | --------------------------- |
-| Frontend         | React, Astro, Vite          |
-| Backend          | Node.js, Express            |
-| Styling          | Tailwind CSS                |
-| State Management | Zustand, React Query        |
-| Realtime         | Socket.IO                   |
-| Infrastructure   | Supabase                    |
-| Tooling          | Turborepo, pnpm, TypeScript |
+* Browser MediaRecorder API
+* Only host records
+* Recording split into 30-second chunks
+* Continuous upload while meeting runs
+* Google Drive storage
+* Parallel transcript + summary processing
+
+This gives:
+
+* free and scalable architecture
+* safer long meetings
+* no duplicate recordings
+* autosave reliability
+* rolling live intelligence
 
 ---
 
-## Development
+# Recording Flow
 
-Install dependencies:
+```text
+Meeting Running
+↓
+Host starts recording
+↓
+Browser captures mic + webcam + screen share
+↓
+30 second chunk generated
+↓
+Chunk uploaded to backend
+↓
+Chunk stored in Google Drive
+↓
+Chunk transcribed
+↓
+Master transcript updated
+↓
+Rolling summary updated
+↓
+Action items updated
+↓
+Chat context updated
+↓
+Repeat continuously
+```
 
-```bash id="p4v8qt"
+---
+
+# Project Structure
+
+```text
+intellmeet/
+│
+├── apps/
+│   ├── frontend/
+│   └── backend/
+│
+├── packages/
+│   ├── ui/
+│   ├── types/
+│   ├── eslint-config/
+│   └── typescript-config/
+│
+├── infrastructure/
+│   ├── docker/
+│   ├── kubernetes/
+│   └── monitoring/
+│
+├── docs/
+├── .github/
+│   └── workflows/
+│
+├── turbo.json
+├── pnpm-workspace.yaml
+├── pnpm-lock.yaml
+├── package.json
+└── README.md
+```
+
+---
+
+# Authentication
+
+## Google OAuth Only
+
+No traditional login/register forms.
+
+### User Flow
+
+```text
+Landing Page
+↓
+Sign Up with Google
+↓
+If existing user → Dashboard
+↓
+If new user → Onboarding
+```
+
+### New User Onboarding
+
+* auto-fetched Google profile
+* name
+* email
+* profile image
+* phone number
+* clear visible face image upload
+* workspace setup
+
+This reduces friction and improves trust.
+
+---
+
+# Development Setup
+
+## Requirements
+
+* Node.js 18+
+* pnpm 9+
+* MongoDB
+* Redis
+* Google Cloud credentials
+* NVIDIA NIM API access
+* OpenRouter API key
+
+---
+
+# Install
+
+## Clone
+
+```bash
+git clone https://github.com/theharshalchaudhari/IntellMeet
+cd intellmeet
+```
+
+## Install dependencies
+
+```bash
 pnpm install
 ```
 
-Start development:
+## Run development
 
-```bash id="m9x2wc"
-turbo dev
-```
-
-Build the workspace:
-
-```bash id="k6n1zr"
-turbo build
-```
-
-Run validation:
-
-```bash id="r3p7vx"
-turbo lint
-turbo check-types
+```bash
+pnpm dev
 ```
 
 ---
 
-## Security
+# Monorepo Rules
 
-Security, authentication integrity, infrastructure protection, and controlled platform access are core requirements across the ecosystem.
+## Only one lockfile
 
-See:
+```text
+/pnpm-lock.yaml
+```
 
-* `SECURITY.md`
+Never create:
+
+```text
+apps/frontend/pnpm-lock.yaml
+apps/backend/pnpm-lock.yaml
+```
+
+## Root controls versions
+
+Use:
+
+```bash
+pnpm add -w
+```
+
+for shared tooling.
+
+Use:
+
+```bash
+pnpm --filter frontend add <package>
+pnpm --filter backend add <package>
+```
+
+for app-specific dependencies.
 
 ---
 
-## Status
+# Development Order
 
-Active development.
+## Phase 1
+
+* backend core setup
+* database
+* auth
+
+## Phase 2
+
+* meeting creation
+* WebRTC
+* Socket.io
+
+## Phase 3
+
+* recording pipeline
+* chunk upload
+* Google Drive storage
+
+## Phase 4
+
+* transcript generation
+* rolling summary
+* AI extraction
+
+## Phase 5
+
+* contextual AI chat
+* searchable meeting memory
+* analytics
+
+---
+
+# Engineering Principles
+
+* clean modular code
+* one source of truth
+* root-controlled versions
+* semantic commits
+* feature branches
+* no committed secrets
+* scalable architecture first
+* product over premature complexity
+
+We optimize for:
+
+**clarity → reliability → scale**
+
+---
+
+# Vision
+
+Meetings should not disappear.
+
+Every discussion should become:
+
+* searchable
+* actionable
+* accountable
+* intelligent
+
+That is what IntellMeet is built for.
+
+---
+
+# Status
+
+Currently in active development.
+
+Architecture is finalized.
+Core system implementation in progress.
+
+Phase 1 foundation complete.
