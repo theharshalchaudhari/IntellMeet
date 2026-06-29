@@ -5,7 +5,7 @@
   "version": "0.0.1",
 
   "engines": {
-    "node": ">=22"
+    "node": "24.x"
   },
 
   "scripts": {
@@ -17,7 +17,7 @@
 
   "dependencies": {
     "@astrojs/react": "catalog:",
-    "@astrojs/node": "catalog:",
+    "@astrojs/vercel": "catalog:",
 
     "@repo/theme": "workspace:*",
 
