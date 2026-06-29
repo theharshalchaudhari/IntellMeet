@@ -1,37 +1,35 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
-import node from '@astrojs/node';
+import vercel from '@astrojs/vercel';
 import tailwindcss from '@tailwindcss/vite';
 
 const supabaseUrl =
-	process.env.PUBLIC_SUPABASE_URL ||
-	process.env.VITE_SUPABASE_URL ||
-	'';
+  process.env.PUBLIC_SUPABASE_URL ||
+  process.env.VITE_SUPABASE_URL ||
+  '';
 
 const supabaseAnonKey =
-	process.env.PUBLIC_SUPABASE_ANON_KEY ||
-	process.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-	process.env.VITE_SUPABASE_ANON_KEY ||
-	process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-	'';
+  process.env.PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  '';
 
 const tailwindPlugin = tailwindcss();
 
 export default defineConfig({
-	output: 'server',
+  output: 'server',
 
-	adapter: node({
-		mode: 'standalone',
-	}),
+  adapter: vercel(),
 
-	vite: {
-		plugins: [tailwindPlugin],
+  vite: {
+    plugins: [tailwindPlugin],
 
-		define: {
-			__INTELLMEET_SUPABASE_URL__: JSON.stringify(supabaseUrl),
-			__INTELLMEET_SUPABASE_ANON_KEY__: JSON.stringify(supabaseAnonKey),
-		},
-	},
+    define: {
+      __INTELLMEET_SUPABASE_URL__: JSON.stringify(supabaseUrl),
+      __INTELLMEET_SUPABASE_ANON_KEY__: JSON.stringify(supabaseAnonKey),
+    },
+  },
 
-	integrations: [react()],
+  integrations: [react()],
 });
