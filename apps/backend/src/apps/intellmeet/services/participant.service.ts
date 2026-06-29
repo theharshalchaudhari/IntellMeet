@@ -13,7 +13,7 @@ export const upsertParticipantJoin = async ({
 }) => {
   const now = new Date().toISOString();
 
-  return supabaseAdmin
+  const result = await supabaseAdmin
     .from("meeting_participants")
     .upsert(
       {
@@ -23,17 +23,36 @@ export const upsertParticipantJoin = async ({
         joined_at: now,
         left_at: null,
       },
-      { onConflict: "meeting_id,user_id" },
+      {
+        onConflict: "meeting_id,user_id",
+      },
     )
-    .select("id, meeting_id, user_id, joined_at, left_at, role")
-    .single();
+    .select();
+
+  console.log("========== PARTICIPANT UPSERT ==========");
+  console.dir(result, { depth: null });
+
+  return result;
 };
 
-export const markParticipantLeft = async ({ meetingId, userId }: { meetingId: string; userId: string }) => {
-  return supabaseAdmin
+export const markParticipantLeft = async ({
+  meetingId,
+  userId,
+}: {
+  meetingId: string;
+  userId: string;
+}) => {
+  const result = await supabaseAdmin
     .from("meeting_participants")
-    .update({ left_at: new Date().toISOString() })
+    .update({
+      left_at: new Date().toISOString(),
+    })
     .eq("meeting_id", meetingId)
     .eq("user_id", userId)
     .is("left_at", null);
+
+  console.log("========== PARTICIPANT LEAVE ==========");
+  console.dir(result, { depth: null });
+
+  return result;
 };

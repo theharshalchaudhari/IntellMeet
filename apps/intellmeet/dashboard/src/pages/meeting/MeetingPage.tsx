@@ -26,6 +26,9 @@ import { MeetingTopOverlay } from './MeetingTopOverlay';
 export const MeetingPage = () => {
   const location = useLocation();
   const params = useParams();
+
+  const instantMeetingSlug = params.meetingCode;
+
   const [joinPreferences, setJoinPreferences] = useState<{
     micEnabled: boolean;
     cameraEnabled: boolean;
@@ -46,16 +49,21 @@ export const MeetingPage = () => {
     [location.pathname],
   );
 
-  const meetingSession = useLiveKitMeeting({
-    meetingCode: params.meetingCode,
-    orgSlug: params.orgSlug,
-    channelSlug: params.channelSlug,
-    meetingSlug: params.meetingSlug,
-  }, {
-    enabled: Boolean(joinPreferences),
-    initialMicEnabled: joinPreferences?.micEnabled ?? true,
-    initialCameraEnabled: joinPreferences?.cameraEnabled ?? true,
-  });
+  const meetingSession = useLiveKitMeeting(
+    {
+      meetingSlug: isOrganizationMeeting
+        ? params.meetingSlug
+        : instantMeetingSlug,
+      orgSlug: params.orgSlug,
+      channelSlug: params.channelSlug,
+    },
+    {
+      enabled: Boolean(joinPreferences),
+      initialMicEnabled: joinPreferences?.micEnabled ?? true,
+      initialCameraEnabled:
+        joinPreferences?.cameraEnabled ?? true,
+    },
+  );
 
   const isHost =
     meetingSession.participantRole === 'host' ||
@@ -63,7 +71,10 @@ export const MeetingPage = () => {
 
   const transcript = useLiveTranscription({
     meetingId: meetingSession.meeting?.id,
-    enabled: Boolean(meetingSession.meeting?.id && meetingSession.micEnabled),
+    enabled: Boolean(
+      meetingSession.meeting?.id &&
+        meetingSession.micEnabled,
+    ),
   });
 
   if (!joinPreferences) {
@@ -71,7 +82,7 @@ export const MeetingPage = () => {
       <MeetingPermissionPrompt
         meetingTitle={
           params.meetingSlug ??
-          params.meetingCode ??
+          instantMeetingSlug ??
           'Meeting'
         }
         onJoin={setJoinPreferences}
@@ -87,15 +98,29 @@ export const MeetingPage = () => {
             collapsed={false}
             micEnabled={meetingSession.micEnabled}
             cameraEnabled={meetingSession.cameraEnabled}
-            screenShareEnabled={meetingSession.screenShareEnabled}
+            screenShareEnabled={
+              meetingSession.screenShareEnabled
+            }
             transcriptOpen={transcriptOpen}
-            onToggleMic={meetingSession.toggleMicrophone}
-            onToggleCamera={meetingSession.toggleCamera}
-            onToggleScreenShare={meetingSession.toggleScreenShare}
+            onToggleMic={
+              meetingSession.toggleMicrophone
+            }
+            onToggleCamera={
+              meetingSession.toggleCamera
+            }
+            onToggleScreenShare={
+              meetingSession.toggleScreenShare
+            }
             onOpenChat={toggleChat}
-            onOpenParticipants={toggleParticipants}
-            onOpenTranscript={toggleTranscript}
-            onOpenReactions={toggleReactions}
+            onOpenParticipants={
+              toggleParticipants
+            }
+            onOpenTranscript={
+              toggleTranscript
+            }
+            onOpenReactions={
+              toggleReactions
+            }
             onOpenSettings={() => undefined}
           />
         ) : null
@@ -104,15 +129,27 @@ export const MeetingPage = () => {
         chatOpen ? (
           <ChatPanel />
         ) : participantsOpen ? (
-          <ParticipantsPanel participants={meetingSession.participants} />
+          <ParticipantsPanel
+            participants={
+              meetingSession.participants
+            }
+          />
         ) : transcriptOpen ? (
           <TranscriptPanel
             entries={transcript.entries}
-            interimText={transcript.interimText}
-            isListening={transcript.isListening}
+            interimText={
+              transcript.interimText
+            }
+            isListening={
+              transcript.isListening
+            }
             error={transcript.error}
-            transcriptText={transcript.transcriptText}
-            onClear={transcript.clearTranscript}
+            transcriptText={
+              transcript.transcriptText
+            }
+            onClear={
+              transcript.clearTranscript
+            }
           />
         ) : null
       }
@@ -126,10 +163,17 @@ export const MeetingPage = () => {
         "
       >
         <MeetingTopOverlay
-          connectionState={meetingSession.connectionState}
-          duration={meetingSession.meeting?.title ?? 'Meeting'}
+          connectionState={
+            meetingSession.connectionState
+          }
+          duration={
+            meetingSession.meeting?.title ??
+            'Meeting'
+          }
           isHost={isHost}
-          onLeave={meetingSession.leaveMeeting}
+          onLeave={
+            meetingSession.leaveMeeting
+          }
           onEnd={meetingSession.endMeeting}
         />
 
@@ -137,50 +181,80 @@ export const MeetingPage = () => {
           <div className="flex h-full items-center justify-center text-center text-sm text-muted-foreground">
             {meetingSession.error}
           </div>
-        ) : meetingSession.participants.length ? (
-          <MeetingGrid participants={meetingSession.participants} />
+        ) : meetingSession.participants
+            .length ? (
+          <MeetingGrid
+            participants={
+              meetingSession.participants
+            }
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-center text-sm text-muted-foreground">
-            Joining meeting
+            Joining meeting...
           </div>
         )}
 
-        {meetingSession.mediaError && !meetingSession.error && (
-          <div
-            className="
-              absolute left-1/2 top-20 z-20
-              max-w-md -translate-x-1/2
-              border border-destructive/30
-              bg-background/95 px-4 py-3
-              text-center text-sm
-              text-destructive shadow-sm
-              backdrop-blur
-            "
-          >
-            {meetingSession.mediaError}
-          </div>
-        )}
+        {meetingSession.mediaError &&
+          !meetingSession.error && (
+            <div
+              className="
+                absolute left-1/2 top-20 z-20
+                max-w-md -translate-x-1/2
+                border border-destructive/30
+                bg-background/95 px-4 py-3
+                text-center text-sm
+                text-destructive shadow-sm
+                backdrop-blur
+              "
+            >
+              {meetingSession.mediaError}
+            </div>
+          )}
 
         <LiveTranscriptOverlay
           entries={transcript.entries}
-          interimText={transcript.interimText}
-          isListening={transcript.isListening}
+          interimText={
+            transcript.interimText
+          }
+          isListening={
+            transcript.isListening
+          }
           error={transcript.error}
-          onOpenTranscript={toggleTranscript}
+          onOpenTranscript={
+            toggleTranscript
+          }
         />
 
         <MeetingBottomOverlay
-          micEnabled={meetingSession.micEnabled}
-          cameraEnabled={meetingSession.cameraEnabled}
-          screenShareEnabled={meetingSession.screenShareEnabled}
+          micEnabled={
+            meetingSession.micEnabled
+          }
+          cameraEnabled={
+            meetingSession.cameraEnabled
+          }
+          screenShareEnabled={
+            meetingSession.screenShareEnabled
+          }
           transcriptOpen={transcriptOpen}
-          onToggleMic={meetingSession.toggleMicrophone}
-          onToggleCamera={meetingSession.toggleCamera}
-          onToggleScreenShare={meetingSession.toggleScreenShare}
+          onToggleMic={
+            meetingSession.toggleMicrophone
+          }
+          onToggleCamera={
+            meetingSession.toggleCamera
+          }
+          onToggleScreenShare={
+            meetingSession.toggleScreenShare
+          }
           onOpenChat={toggleChat}
-          onOpenParticipants={toggleParticipants}
-          onOpenTranscript={toggleTranscript}
-          onOpenReactions={toggleReactions}
+          onOpenParticipants={
+            toggleParticipants
+          }
+          onOpenTranscript={
+            toggleTranscript
+          }
+          onOpenReactions={
+            toggleReactions
+          }
         />
 
         <ReactionsLayer />

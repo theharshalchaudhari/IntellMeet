@@ -1,59 +1,49 @@
 import { useNavigate } from 'react-router-dom';
 
+import { useMutation } from '@tanstack/react-query';
 import { Video } from 'lucide-react';
 
 import { Button } from '@wraith/ui/shadcn/button';
 
-const generateMeetingCode = () => {
-  const chars =
-    'abcdefghijklmnopqrstuvwxyz';
+import { intellmeetRealtimeApi, type LiveKitTokenResponse, } from "../api/intellmeetRealtimeApi";
 
-  const generatePart = () =>
-    Array.from({
-      length: 4,
-    })
-      .map(
-        () =>
-          chars[
-            Math.floor(
-              Math.random() *
-                chars.length,
-            )
-          ],
-      )
-      .join('');
+export const CreateInstantMeetingButton = () => {
+  const navigate = useNavigate();
 
-  return `${generatePart()}-${generatePart()}-${generatePart()}`;
-};
+  const createMeetingMutation = useMutation<LiveKitTokenResponse, Error>({
+    mutationFn: () => intellmeetRealtimeApi.createInstantMeeting(),
 
-export const CreateInstantMeetingButton =
-  () => {
-    const navigate =
-      useNavigate();
+    onSuccess: ({ meeting }) => {
+      navigate(`/${meeting.meeting_slug}`);
+    },
 
-    const handleStartMeeting =
-      () => {
-        const meetingCode =
-          generateMeetingCode();
+    onError: (error) => {
+      console.error('Failed to create instant meeting:', error);
+    },
+  });
 
-        navigate(
-          `/${meetingCode}`,
-        );
-      };
+  const handleStartMeeting = () => {
+    if (createMeetingMutation.isPending) {
+      return;
+    }
 
-    return (
-      <Button
-        type="button"
-        onClick={handleStartMeeting}
-        className="
-          h-11 gap-2
-        "
-      >
-        <Video className="size-4" />
-
-        <span>
-          Instant Meet
-        </span>
-      </Button>
-    );
+    createMeetingMutation.mutate();
   };
+
+  return (
+    <Button
+      type="button"
+      onClick={handleStartMeeting}
+      disabled={createMeetingMutation.isPending}
+      className="h-11 gap-2"
+    >
+      <Video className="size-4" />
+
+      <span>
+        {createMeetingMutation.isPending
+          ? 'Creating...'
+          : 'Instant Meet'}
+      </span>
+    </Button>
+  );
+};

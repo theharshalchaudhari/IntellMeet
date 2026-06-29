@@ -1,6 +1,8 @@
 import crypto from "node:crypto";
 
-import type { MeetingType } from "@/apps/intellmeet/types/meeting";
+const SLUG_ALPHABET = "abcdefghijklmnopqrstuvwxyz";
+const SLUG_PART_LENGTH = 4;
+const SLUG_PARTS = 3;
 
 export const slugify = (value: string) =>
   value
@@ -10,9 +12,16 @@ export const slugify = (value: string) =>
     .replace(/(^-|-$)+/g, "")
     .slice(0, 64) || "meeting";
 
-export const createMeetingSlug = (prefix: MeetingType) =>
-  `${prefix}-${crypto.randomBytes(5).toString("hex")}`;
+const generateSlugPart = () =>
+  Array.from({ length: SLUG_PART_LENGTH }, () =>
+    SLUG_ALPHABET[crypto.randomInt(SLUG_ALPHABET.length)],
+  ).join("");
 
-export const createChannelSlug = (name: string) => slugify(name);
+export const createMeetingSlug = () =>
+  Array.from({ length: SLUG_PARTS }, generateSlugPart).join("-");
 
-export const createRoomName = (meetingSlug: string) => `lk-${meetingSlug}`;
+export const createChannelSlug = (name: string) =>
+  slugify(name);
+
+export const createRoomName = (meetingSlug: string) =>
+  `lk-${meetingSlug}`;

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useRef, useMemo } from 'react';
 import { Upload, X, Sparkles, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -242,6 +242,11 @@ export const MeetingsPage = () => {
 
   const summary = formatSummary(range, startTime, endTime);
 
+  const params = useParams();
+
+console.log("Meeting params:", params);
+console.log("Current URL:", window.location.pathname);
+
   return (
     <PageTransition>
         <div className="flex items-center justify-between gap-4">
@@ -323,14 +328,9 @@ export const MeetingsPage = () => {
                     transition={{ duration: 0.15 }}
                     className="flex min-h-72 flex-col items-center justify-center gap-4 text-center"
                   >
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                      <Zap size={24} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">Start instantly</p>
-                      <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-                        A meeting room opens right away — just fill in a title and go.
-                      </p>
+                    <div className="flex h-100 w-100 items-center justify-center rounded-2xl">
+                      <Zap size={600} className="text-primary" />
+                   
                     </div>
                   </motion.div>
                 )}

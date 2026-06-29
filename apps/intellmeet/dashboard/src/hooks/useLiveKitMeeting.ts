@@ -16,10 +16,9 @@ import {
 } from '../api/intellmeetRealtimeApi';
 
 export type LiveKitMeetingIdentifiers = {
-  meetingCode?: string;
+  meetingSlug?: string;
   orgSlug?: string;
   channelSlug?: string;
-  meetingSlug?: string;
 };
 
 export type LiveKitMeetingOptions = {
@@ -105,8 +104,14 @@ const buildTiles = (room: Room | null, activeSpeakerIds: Set<string>) => {
   ];
 };
 
-const resolveTokenInput = (identifiers: LiveKitMeetingIdentifiers) => {
-  if (identifiers.orgSlug && identifiers.channelSlug && identifiers.meetingSlug) {
+const resolveTokenInput = (
+  identifiers: LiveKitMeetingIdentifiers,
+) => {
+  if (
+    identifiers.orgSlug &&
+    identifiers.channelSlug &&
+    identifiers.meetingSlug
+  ) {
     return {
       orgSlug: identifiers.orgSlug,
       channelSlug: identifiers.channelSlug,
@@ -115,7 +120,7 @@ const resolveTokenInput = (identifiers: LiveKitMeetingIdentifiers) => {
   }
 
   return {
-    meetingCode: identifiers.meetingCode,
+    meetingSlug: identifiers.meetingSlug,
   };
 };
 
@@ -124,7 +129,6 @@ export const useLiveKitMeeting = (
   options: LiveKitMeetingOptions = {},
 ) => {
   const {
-    meetingCode,
     orgSlug,
     channelSlug,
     meetingSlug,
@@ -148,19 +152,18 @@ export const useLiveKitMeeting = (
   const tokenInput = useMemo(
     () =>
       resolveTokenInput({
-        meetingCode,
         orgSlug,
         channelSlug,
         meetingSlug,
       }),
     [
       channelSlug,
-      meetingCode,
       meetingSlug,
       orgSlug,
     ],
   );
-  const missingRoute = !tokenInput.meetingCode && !tokenInput.meetingSlug;
+  
+  const missingRoute = !tokenInput.meetingSlug;
 
   const bumpRevision = useCallback(() => {
     setRevision((current) => current + 1);

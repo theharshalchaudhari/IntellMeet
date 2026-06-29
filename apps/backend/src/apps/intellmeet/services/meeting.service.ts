@@ -98,23 +98,37 @@ export const resolveOrganizationMeeting = async ({
   };
 };
 
-export const resolveInstantMeeting = async (meetingCode: string, userId: string) => {
+export const resolveInstantMeeting = async (
+  meetingCode: string,
+  userId: string,
+) => {
+  console.log("Looking for meeting:", meetingCode);
+
+  const { data: meetings } = await supabaseAdmin
+    .from("meetings")
+    .select("id, meeting_slug, room_name");
+
+  console.log("Existing meetings:", meetings);
+
   const { data: meeting, error } = await supabaseAdmin
     .from("meetings")
     .select(meetingSelect)
-    .eq("meeting_type", "instant")
     .eq("meeting_slug", meetingCode)
     .maybeSingle<MeetingRow>();
 
-  if (error || !meeting) {
-    return { error: error ?? new Error("Meeting not found"), status: 404 as const };
-  }
+  console.log("Found:", meeting);
+  console.log("Error:", error);
 
-  const role: MeetingRole = meeting.created_by === userId ? "host" : "guest";
+  if (error || !meeting) {
+    return {
+      error: error ?? new Error("Meeting not found"),
+      status: 404 as const,
+    };
+  }
 
   return {
     meeting: mapMeeting(meeting as unknown as Record<string, unknown>),
-    role,
+    role: meeting.created_by === userId ? "host" : "guest",
   };
 };
 
@@ -145,7 +159,7 @@ export const createInstantMeeting = async ({
   userId: string;
   title?: string;
 }) => {
-  const meetingSlug = createMeetingSlug("instant");
+  const meetingSlug = createMeetingSlug();
   const roomName = createRoomName(meetingSlug);
   const now = new Date().toISOString();
 

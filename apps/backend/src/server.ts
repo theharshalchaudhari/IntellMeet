@@ -27,6 +27,12 @@ const io = new Server(httpServer, {
   },
 });
 
+console.log({
+  url: process.env.SUPABASE_URL,
+  serviceRoleExists: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+  serviceRoleLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length,
+});
+
 initializeMeetingSockets(io);
 initializeMediaSockets(io);
 initializeReactionSockets(io);

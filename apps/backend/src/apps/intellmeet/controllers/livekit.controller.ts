@@ -17,10 +17,21 @@ const getUserProfileName = async (userId: string) => {
   };
 };
 
+
+
 export const createToken = async (req: AuthedRequest, res: Response) => {
+  console.log("============== CREATE TOKEN ==============");
+console.log("Incoming body:", req.body);
+
+  console.log("Incoming body:", req.body);
   try {
     const userId = req.user?.id;
-    const { meetingId, meetingSlug, orgSlug, channelSlug, meetingCode } = req.body ?? {};
+    const {
+  meetingId,
+  meetingSlug,
+  orgSlug,
+  channelSlug,
+} = req.body ?? {};
 
     if (!userId) {
       return sendError(res, 401, "Unauthorized");
@@ -28,74 +39,44 @@ export const createToken = async (req: AuthedRequest, res: Response) => {
 
     const profile = await getUserProfileName(userId);
 
-    if (meetingCode) {
-      const resolution = await resolveInstantMeeting(String(meetingCode), userId);
+   if (meetingSlug && !orgSlug && !channelSlug) {
+  const resolution = await resolveInstantMeeting(
+    String(meetingSlug),
+    userId,
+  );
 
-      if ("error" in resolution) {
-        return sendError(res, resolution.status ?? 500, resolution.error?.message ?? "Meeting not found");
-      }
+  if ("error" in resolution) {
+    return sendError(
+      res,
+      resolution.status ?? 500,
+      resolution.error?.message ?? "Meeting not found",
+    );
+  }
 
-      const token = createLiveKitAccessToken({
-        roomName: resolution.meeting.room_name,
-        identity: userId,
-        participantName: profile.name,
-        metadata: {
-          userId,
-          meetingId: resolution.meeting.id,
-          meetingSlug: resolution.meeting.meeting_slug,
-          meetingType: resolution.meeting.meeting_type,
-          avatarUrl: profile.avatarUrl,
-        },
-      });
+  const token = await createLiveKitAccessToken({
+    roomName: resolution.meeting.room_name,
+    identity: userId,
+    participantName: profile.name,
+    metadata: {
+      userId,
+      meetingId: resolution.meeting.id,
+      meetingSlug: resolution.meeting.meeting_slug,
+      meetingType: resolution.meeting.meeting_type,
+      avatarUrl: profile.avatarUrl,
+    },
+  });
 
-      return sendOk(res, {
-        meeting: resolution.meeting,
-        roomName: resolution.meeting.room_name,
-        liveKitUrl: env.LIVEKIT_URL,
-        identity: userId,
-        participantName: profile.name,
-        accessToken: token,
-        participantRole: resolution.role,
-      });
-    }
+  return sendOk(res, {
+    meeting: resolution.meeting,
+    roomName: resolution.meeting.room_name,
+    liveKitUrl: env.LIVEKIT_URL,
+    identity: userId,
+    participantName: profile.name,
+    accessToken: token,
+    participantRole: resolution.role,
+  });
+}
 
-    if (orgSlug && channelSlug && meetingSlug) {
-      const resolution = await resolveOrganizationMeeting({
-        orgSlug: String(orgSlug),
-        channelSlug: String(channelSlug),
-        meetingSlug: String(meetingSlug),
-        userId,
-      });
-
-      if ("error" in resolution) {
-        return sendError(res, resolution.status ?? 500, resolution.error?.message ?? "Meeting not found");
-      }
-
-      const token = createLiveKitAccessToken({
-        roomName: resolution.meeting.room_name,
-        identity: userId,
-        participantName: profile.name,
-        metadata: {
-          userId,
-          meetingId: resolution.meeting.id,
-          organizationId: resolution.meeting.organization_id,
-          channelId: resolution.meeting.channel_id,
-          meetingSlug: resolution.meeting.meeting_slug,
-          meetingType: resolution.meeting.meeting_type,
-          avatarUrl: profile.avatarUrl,
-        },
-      });
-
-      return sendOk(res, {
-        meeting: resolution.meeting,
-        roomName: resolution.meeting.room_name,
-        liveKitUrl: env.LIVEKIT_URL,
-        identity: userId,
-        participantName: profile.name,
-        accessToken: token,
-        participantRole: resolution.role,
-      });
-    }
 
     if (meetingId) {
       const meeting = await findMeetingByIdentifier(String(meetingId));
@@ -104,7 +85,7 @@ export const createToken = async (req: AuthedRequest, res: Response) => {
         return sendError(res, 404, "Meeting not found");
       }
 
-      const token = createLiveKitAccessToken({
+      const token = await createLiveKitAccessToken({
         roomName: meeting.room_name,
         identity: userId,
         participantName: profile.name,
@@ -146,7 +127,7 @@ export const createInstantMeetingHandler = async (req: AuthedRequest, res: Respo
     const meeting = await createInstantMeeting({ userId, title });
     const profile = await getUserProfileName(userId);
 
-    const token = createLiveKitAccessToken({
+    const token = await createLiveKitAccessToken({
       roomName: meeting.room_name,
       identity: userId,
       participantName: profile.name,

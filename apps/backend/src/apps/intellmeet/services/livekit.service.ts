@@ -13,7 +13,7 @@ type LiveKitTokenOptions = {
   canUpdateOwnMetadata?: boolean;
 };
 
-export const createLiveKitAccessToken = ({
+export const createLiveKitAccessToken = async ({
   roomName,
   identity,
   participantName,
@@ -23,11 +23,25 @@ export const createLiveKitAccessToken = ({
   canPublishData = true,
   canUpdateOwnMetadata = true,
 }: LiveKitTokenOptions) => {
-  const token = new AccessToken(env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET, {
+  console.log("========== LIVEKIT SERVICE ==========");
+
+  console.log({
+    LIVEKIT_URL: env.LIVEKIT_URL,
+    LIVEKIT_API_KEY: env.LIVEKIT_API_KEY,
+    LIVEKIT_API_SECRET_LENGTH: env.LIVEKIT_API_SECRET.length,
+    roomName,
     identity,
-    name: participantName,
-    metadata: JSON.stringify(metadata),
   });
+
+  const token = new AccessToken(
+    env.LIVEKIT_API_KEY,
+    env.LIVEKIT_API_SECRET,
+    {
+      identity,
+      name: participantName,
+      metadata: JSON.stringify(metadata),
+    },
+  );
 
   token.addGrant({
     roomJoin: true,
@@ -38,5 +52,10 @@ export const createLiveKitAccessToken = ({
     canUpdateOwnMetadata,
   });
 
-  return token.toJwt();
+  const jwt = await token.toJwt();
+
+  console.log("JWT generated:", jwt.substring(0, 60) + "...");
+  
+
+  return jwt;
 };
